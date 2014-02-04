@@ -12,6 +12,7 @@ int main(){
 	
 	std::cout<<"join "<<vv.join()<<std::endl;
 	std::cout<<"filter join "<<vv.filter([](int v){ return v%2; }).join()<<std::endl;
+	std::cout<<"remove join "<<vv.remove(5).join()<<std::endl;
 	std::cout<<"map join "<<vv.map<int>([](int v){ return v*2; }).join()<<std::endl;
 	std::cout<<"reverse join "<<vv.reverse().join()<<std::endl;
 	std::cout<<"sort join "<<vv.sort().join()<<std::endl;
@@ -21,6 +22,8 @@ int main(){
 		reverse().
 		join("][")<<"]"<<std::endl;
 		
+	std::cout<<"---"<<std::endl;
+	
 	std::cout<<"head join "<<vv.head(2).join()<<std::endl;
 	std::cout<<"head- join "<<vv.head(-2).join()<<std::endl;
 	std::cout<<"tail- join "<<vv.tail(-2).join()<<std::endl;
@@ -34,4 +37,17 @@ int main(){
 								.join("\n")<<std::endl;
 								
 	std::cout<<__("Hola, mundo").join("\n")<<std::endl;
+	
+	std::cout<<"---"<<std::endl;
+	
+	std::cout<<"sum "<<_(std::vector<int>{1,2,3,4,5,6}).reduce<int>([](int a, int b){ return a+b; }, 0)<<std::endl;
+	std::cout<<"max "<<_(std::vector<int>{1,2,3,4,5,6}).max()<<std::endl;
+	std::cout<<"min "<<_(std::vector<int>{1,2,3,4,5,6}).min()<<std::endl;
+
+	std::cout<<"---"<<std::endl;
+
+	// for access
+	for(auto &v: vv){
+		std::cout<<v<<std::endl;
+	}
 }
