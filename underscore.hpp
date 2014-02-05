@@ -237,12 +237,12 @@ namespace underscore{
 		auto eb=std::end(b);
 		while (ia!=ea || ib!=eb){
 			if (ia==ea){
-				typename A::value_type va;
-				ret.push_back(std::make_tuple(std::move(va), *ib));
+				auto va=typename A::value_type();
+				ret.push_back(std::make_tuple(va, *ib));
 				++ib;
 			}
 			else if (ib==eb){
-				typename B::value_type vb;
+				auto vb=typename B::value_type();
 				ret.push_back(std::make_tuple(*ia, std::move(vb)));
 				++ia;
 			}
