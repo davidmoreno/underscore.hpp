@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-#include <boost/concept_check.hpp>
+#include <tuple>
 
 namespace std{
 	std::string to_string(std::string str){ return str; }; // Need to copy it anyway, so no const &.
@@ -77,6 +77,15 @@ namespace underscore{
 			std::vector<S> ret;
 			ret.reserve(size());
 			std::transform(_data.begin(),_data.end(), std::back_inserter(ret), f);
+			return underscore<std::vector<S>>(std::move(ret));
+		}
+		template<typename S, typename A, typename B>
+		underscore<std::vector<S>> map(const std::function<S (const A &a, const B &b)> &f) const{
+			std::vector<S> ret;
+			ret.reserve(size());
+			std::transform(_data.begin(),_data.end(), std::back_inserter(ret), [&f](const std::tuple<A,B> &d){
+				return f(std::get<0>(d),std::get<1>(d));
+			});
 			return underscore<std::vector<S>>(std::move(ret));
 		}
 		
@@ -214,5 +223,48 @@ namespace underscore{
 	underscore<std::vector<int>> _(std::initializer_list<int> &&v){
 		auto vv=std::vector<int>(std::forward<std::initializer_list<int>>(v));
 		return underscore<std::vector<int>>(vv);
+	}
+	
+	template<typename A, typename B>
+	underscore<std::vector<std::tuple<typename A::value_type, typename B::value_type>>> zip(const A &a, const B &b){
+		typedef std::tuple<typename A::value_type, typename B::value_type> ret_t;
+		std::vector<ret_t> ret;
+		ret.reserve(std::max(a.size(), b.size()));
+		
+		auto ia=std::begin(a);
+		auto ea=std::end(a);
+		auto ib=std::begin(b);
+		auto eb=std::end(b);
+		while (ia!=ea || ib!=eb){
+			if (ia==ea){
+				typename A::value_type va;
+				ret.push_back(std::make_tuple(std::move(va), *ib));
+				++ib;
+			}
+			else if (ib==eb){
+				typename B::value_type vb;
+				ret.push_back(std::make_tuple(*ia, std::move(vb)));
+				++ia;
+			}
+			else{
+				ret.push_back(std::make_tuple(*ia, *ib));
+				++ia;
+				++ib;
+			}
+		}
+		
+		return ret;
+	}
+	template<typename A_t, typename B>
+	underscore<std::vector<std::tuple<A_t, typename B::value_type>>> zip(std::initializer_list<A_t> &&a, B &&b){
+		return zip(a, b);
+	}
+	template<typename A_t, typename B_t>
+	underscore<std::vector<std::tuple<A_t, B_t>>> zip(std::initializer_list<A_t> &&a, std::initializer_list<B_t>  &&b){
+		return zip(a, b);
+	}
+	template<typename A, typename B_t>
+	underscore<std::vector<std::tuple<typename A::value_type, B_t>>> zip(A &&a, std::initializer_list<B_t>  &&b){
+		return zip(a, b);
 	}
 };

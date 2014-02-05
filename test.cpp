@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <boost/concept_check.hpp>
 
 using namespace underscore;
 
@@ -55,4 +56,32 @@ int main(){
 	for(auto &v: vv.sort()){
 		std::cout<<v<<std::endl;
 	}
+
+	std::cout<<"---"<<std::endl;
+	
+	
+	std::cout<<
+		zip(std::vector<int>{1,2,3},std::vector<char>{'a','b','c','d'})
+			.map<std::string>([](const std::tuple<int,char> &p){ return std::to_string(std::get<0>(p))+"--"+char(std::get<1>(p)); })
+			.join()
+			<<std::endl;
+	std::cout<<
+		zip(std::vector<int>{1,2,3,4},std::vector<char>{'a','b','c'})
+			.map<std::string>([](const std::tuple<int,char> &p){ 
+				int a; char b;
+				std::tie(a,b) = p;
+				return std::to_string(a)+"--"+char(b); 
+			})
+			.join()
+			<<std::endl;
+	std::cout<<
+		zip({1,2,3,4},std::vector<char>{'a','b','c','d'})
+			.map<std::string, int, char>([](int a, char b){ return std::to_string(a)+"--"+char(b); })
+			.join()
+			<<std::endl;
+	std::cout<<
+		zip({1,2,3,4},{'a','b','c','d'})
+			.map<std::string, int, char>([](int a, char b){ return std::to_string(a)+"--"+char(b); })
+			.join()
+			<<std::endl;
 }
