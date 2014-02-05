@@ -37,8 +37,8 @@ namespace underscore{
 		underscore(T &&data) : _data(data) {}
 		underscore() {}
 
-		iterator begin(){ return _data.begin(); }
-		iterator end(){ return _data.end(); }
+		iterator begin() { return std::begin(_data); }
+		iterator end() { return std::end(_data); }
 		
 		bool empty() const { return _data.empty(); }
 		size_t size() const { return _data.size(); }
@@ -51,7 +51,7 @@ namespace underscore{
 			auto I=_data.begin();
 			ret=std::to_string(*I);
 			++I;
-			ret=std::accumulate(I, _data.end(), ret, [&sep](std::string &acc, const typename T::value_type &v){
+			ret=std::accumulate(I, _data.end(), ret, [&sep](std::string &acc, const value_type &v){
 				acc+=sep;
 				acc+=std::to_string(v);
 				return acc;
@@ -209,5 +209,10 @@ namespace underscore{
 	template<typename T>
 	underscore<T> _(T &&v){
 		return underscore<T>(std::forward<T>(v));
+	}
+	//template<>
+	underscore<std::vector<int>> _(std::initializer_list<int> &&v){
+		auto vv=std::vector<int>(std::forward<std::initializer_list<int>>(v));
+		return underscore<std::vector<int>>(vv);
 	}
 };

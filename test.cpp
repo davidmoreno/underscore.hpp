@@ -8,7 +8,7 @@ using namespace underscore;
 int main(){
 	std::vector<int> v{1,2,3,4,5};
 	
-	auto vv = _(std::move(v));
+	const auto vv = _(std::move(v));
 	
 	std::cout<<"join "<<vv.join()<<std::endl;
 	std::cout<<"filter join "<<vv.filter([](int v){ return v%2; }).join()<<std::endl;
@@ -40,14 +40,19 @@ int main(){
 	
 	std::cout<<"---"<<std::endl;
 	
-	std::cout<<"sum "<<_(std::vector<int>{1,2,3,4,5,6}).reduce<int>([](int a, int b){ return a+b; }, 0)<<std::endl;
-	std::cout<<"max "<<_(std::vector<int>{1,2,3,4,5,6}).max()<<std::endl;
-	std::cout<<"min "<<_(std::vector<int>{1,2,3,4,5,6}).min()<<std::endl;
+	std::cout<<"sum "<<_({1,2,3,4,5,6}).reduce<int>([](int a, int b){ return a+b; }, 0)<<std::endl;
+	std::cout<<"max "<<_({1,2,3,4,5,6}).max()<<std::endl;
+	std::cout<<"min "<<_({1,2,3,4,5,6}).min()<<std::endl;
 
 	std::cout<<"---"<<std::endl;
 
-	// for access
-	for(auto &v: vv){
+	const std::vector<int> v2{1,2,3,4,5};
+	for(auto &i: v2){
+		std::cout<<i<<std::endl;
+	}
+
+// 	for access. FIXME, no sort.
+	for(auto &v: vv.sort()){
 		std::cout<<v<<std::endl;
 	}
 }
