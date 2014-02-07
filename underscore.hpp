@@ -391,6 +391,32 @@ namespace underscore{
 					return false;
 			return true;
 		}
+
+		/**
+		* @short Unzips a list of tuples. Creates two lists, the first with all the first elements, the second with the second elements.
+		* 
+		* Example:
+		* 	
+		* 	auto ab=_({{1,'a'},{2,'b'},{3,'c'}})
+		* 	auto a=get<0>( ab.unzip<int,char>() ); // == {1, 2, 3, 4}
+		*/
+		template<typename A_t, typename B_t>
+		std::tuple<underscore<std::vector<A_t>>, underscore<std::vector<B_t>>> unzip(){
+			std::vector<A_t> A;
+			std::vector<B_t> B;
+			size_t s=size();
+			
+			A.reserve(s);
+			B.reserve(s);
+
+			for(auto &v: _data){
+				A.push_back(std::get<0>(v));
+				B.push_back(std::get<1>(v));
+			}
+			
+			return std::make_tuple(underscore<std::vector<A_t>>(std::move(A)),underscore<std::vector<B_t>>(std::move(B)));
+		}
+
 	};
 	
 	/**
@@ -536,30 +562,5 @@ namespace underscore{
 	 */
 	underscore<std::vector<std::tuple<typename A::value_type, B_t>>> zip(A &&a, std::initializer_list<B_t>  &&b){
 		return zip(a, b);
-	}
-	
-	/**
-	 * @short Unzips a list of tuples. Creates two lists, the first with all the first elements, the second with the second elements.
-	 * 
-	 * Example:
-	 * 	
-	 * 	auto ab=_({{1,'a'},{2,'b'},{3,'c'}})
-	 * 	auto a=get<0>( unzip(ab) ); // == {1, 2, 3, 4}
-	 */
-	template<typename A_t, typename B_t>
-	std::tuple<underscore<std::vector<A_t>>, underscore<std::vector<B_t>>> unzip(const underscore<std::vector<std::tuple<A_t,B_t>>> &compound_list){
-		std::vector<A_t> A;
-		std::vector<B_t> B;
-		size_t size=compound_list.size();
-		
- 		A.reserve(size);
- 		B.reserve(size);
-
-		for(auto &v: compound_list){
-			A.push_back(std::get<0>(v));
-			B.push_back(std::get<1>(v));
-		}
-		
-		return std::make_tuple(_(std::move(A)),_(std::move(B)));
 	}
 };

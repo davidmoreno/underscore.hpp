@@ -107,7 +107,7 @@ void t06_zip(){
  	FAIL_IF_NOT_EQUAL_STRING(zipped_from_std_initialization_lists_and_tuple_map, "1--a, 2--b, 3--c, 4--d");
 	
 	
-	auto two_lists = unzip<int,char>(zipped_event_il);
+	auto two_lists = zipped_event_il.unzip<int,char>();
 	auto first = std::get<0>(two_lists);
 	auto second = std::get<1>(two_lists);
 	
