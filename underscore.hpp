@@ -25,6 +25,7 @@
 
 namespace std{
 	std::string to_string(std::string str){ return str; }; // Need to copy it anyway, so no const &.
+	std::string to_string(const char c){ char tmp[]={c,0}; return std::string(tmp); }; // Need to copy it anyway, so no const &.
 };
 
 namespace underscore{
@@ -40,6 +41,7 @@ namespace underscore{
 	public:
 		typedef typename I::value_type value_type;
 		typedef I iterator;
+		typedef const I const_iterator;
 		
 		range(I begin, I end) : _begin(begin), _end(end) {}
 		range(I &&begin, I &&end) : _begin(begin), _end(end) {}
@@ -81,6 +83,7 @@ namespace underscore{
 			bool operator==(const iterator &o) const{ return i==o.i; }
 			bool operator!=(const iterator &o) const{ return i!=o.i; }
 		};
+		typedef const iterator const_iterator;
 	private:
 		iterator _begin;
 		iterator _end;
@@ -115,13 +118,17 @@ namespace underscore{
 		T _data;
 		typedef typename T::value_type value_type;
 		typedef typename T::iterator iterator;
+		typedef typename T::const_iterator const_iterator;
 	public:
 		underscore(const T &data) : _data(data) {}
 		underscore(T &&data) : _data(data) {}
 		underscore() {}
 
-		iterator begin() { return std::begin(_data); }
-		iterator end() { return std::end(_data); }
+		iterator begin(){ return std::begin(_data); }
+		iterator end(){ return std::end(_data); }
+		
+		const_iterator begin() const { return _data.begin(); }
+		const_iterator end() const{ return _data.end(); }
 		
 		bool empty() const { return _data.empty(); }
 		size_t size() const { return _data.size(); }
@@ -210,11 +217,32 @@ namespace underscore{
 		/**
 		 * @short Sorts the elements using default < comparison.
 		 */
-		underscore<T> sort() const{
+		underscore<std::vector<value_type>> sort() const{
 			std::vector<value_type> ret;
 			ret.reserve(size());
 			std::copy(_data.begin(), _data.end(), std::back_inserter(ret));
 			std::sort(ret.begin(), ret.end());
+			return ret;
+		}
+		
+		/**
+		 * @short Returns a list with the same elements only once, in the same order.
+		 * 
+		 * Complexity O(N²). 
+		 * 
+		 * If sorted pass the true parameter, and it will use O(N)
+		 */
+		underscore<std::vector<value_type>> unique(bool is_sorted=false) const{
+			std::vector<value_type> ret;
+			if (is_sorted){
+				std::unique_copy(std::begin(_data), std::end(_data), std::back_inserter(ret));
+			}
+			else{
+				for(auto &v: _data){
+					if (std::find(std::begin(ret), std::end(ret), v) == std::end(ret))
+						ret.push_back(v);
+				}
+			}
 			return ret;
 		}
 
@@ -508,5 +536,30 @@ namespace underscore{
 	 */
 	underscore<std::vector<std::tuple<typename A::value_type, B_t>>> zip(A &&a, std::initializer_list<B_t>  &&b){
 		return zip(a, b);
+	}
+	
+	/**
+	 * @short Unzips a list of tuples. Creates two lists, the first with all the first elements, the second with the second elements.
+	 * 
+	 * Example:
+	 * 	
+	 * 	auto ab=_({{1,'a'},{2,'b'},{3,'c'}})
+	 * 	auto a=get<0>( unzip(ab) ); // == {1, 2, 3, 4}
+	 */
+	template<typename A_t, typename B_t>
+	std::tuple<underscore<std::vector<A_t>>, underscore<std::vector<B_t>>> unzip(const underscore<std::vector<std::tuple<A_t,B_t>>> &compound_list){
+		std::vector<A_t> A;
+		std::vector<B_t> B;
+		size_t size=compound_list.size();
+		
+ 		A.reserve(size);
+ 		B.reserve(size);
+
+		for(auto &v: compound_list){
+			A.push_back(std::get<0>(v));
+			B.push_back(std::get<1>(v));
+		}
+		
+		return std::make_tuple(_(std::move(A)),_(std::move(B)));
 	}
 };

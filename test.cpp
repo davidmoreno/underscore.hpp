@@ -27,6 +27,10 @@ void t02_ops(){
 	FAIL_IF_NOT_EQUAL_STRING(vv.map<int>([](int v){ return v*2; }).join(), "2, 4, 6, 8, 10");
 	FAIL_IF_NOT_EQUAL_STRING(vv.reverse().join(), "5, 4, 3, 2, 1");
 	FAIL_IF_NOT_EQUAL_STRING(_({5,3,2,1,4}).sort().join(), vv.join());
+	
+	FAIL_IF_NOT_EQUAL_STRING(_({1,2,3,4,5,2,3,4,5,6,1,3,2}).unique().join(),"1, 2, 3, 4, 5, 6");
+	FAIL_IF_NOT_EQUAL_STRING(_({1,2,3,4,5,2,3,4,5,6,1,3,2}).sort().unique(true).join(),"1, 2, 3, 4, 5, 6");
+	
 	FAIL_IF_NOT_EQUAL_STRING(
 		vv.
 			filter([](int v)           { return v!=3; }).
@@ -91,7 +95,8 @@ void t06_zip(){
 	// Need the +char(0) because if not the size is not correct (C++ strings, you know, \0 can be part of it)
 	FAIL_IF_NOT_EQUAL_STRING(zipped_uneven_b_from_vector_and_standard_map, std::string("1--a, 2--b, 3--c, 4--")+char(0));
 	
-	auto zipped_event_il_and_tuple_map=zip({1,2,3,4},std::vector<char>{'a','b','c','d'})
+	auto zipped_event_il=zip({1,2,3,4},std::vector<char>{'a','b','c','d'});
+	auto zipped_event_il_and_tuple_map=zipped_event_il
 			.map<std::string, int, char>([](int a, char b){ return std::to_string(a)+"--"+char(b); })
 			.join();
 	FAIL_IF_NOT_EQUAL_STRING(zipped_event_il_and_tuple_map, "1--a, 2--b, 3--c, 4--d");
@@ -100,6 +105,14 @@ void t06_zip(){
  			.map<std::string, int, char>([](int a, char b){ return std::to_string(a)+"--"+char(b); })
  			.join();
  	FAIL_IF_NOT_EQUAL_STRING(zipped_from_std_initialization_lists_and_tuple_map, "1--a, 2--b, 3--c, 4--d");
+	
+	
+	auto two_lists = unzip<int,char>(zipped_event_il);
+	auto first = std::get<0>(two_lists);
+	auto second = std::get<1>(two_lists);
+	
+	FAIL_IF_NOT_EQUAL_STRING(first.join(), "1, 2, 3, 4");
+	FAIL_IF_NOT_EQUAL_STRING(second.join(), "a, b, c, d");
 	
 	END_LOCAL();
 }
