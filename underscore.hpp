@@ -226,7 +226,7 @@ namespace underscore{
 		 * @short Flattens the application of a map that returns lists.
 		 * 
 		 * Example:
-		 * 	a=_({"Hello","world"}).flatMap<char>([](const std::string &s){ return _(s); }) == {'H','e','l','l','o',','w','o','r','l','d'}
+		 * 	a=_({"Hello","world"}).flatMap<std::string>([](const std::string &s){ return _(s); }) == {'H','e','l','l','o',','w','o','r','l','d'}
 		 */
 		template<typename S>
 		underscore<std::vector<typename S::value_type>> flatMap(const std::function<S (const value_type &)> &f){
