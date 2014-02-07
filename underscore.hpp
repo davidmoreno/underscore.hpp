@@ -68,7 +68,7 @@ namespace underscore{
 		/**
 		 * @short To allow normal range operations many int operations must be reimplemented to simulate an iterator.
 		 */
-		class iterator{
+		class iterator : public std::iterator<std::output_iterator_tag,int>{
 			value_type i;
 		public:
 			iterator(value_type n) : i(n) {}
@@ -96,6 +96,14 @@ namespace underscore{
 		size_t size() const { return _end-_begin; }
 		bool empty() const { return _begin==_end; }
 	};
+	
+	template<typename T>
+	range<T> make_range(T &&begin, T &&end){
+		return range<T>(std::forward(begin), std::forward(end));
+	}
+	range<int> make_range(int begin, int end){
+		return range<int>(begin, end);
+	}
 	
 	/**
 	 * @short Wraps any container and add the underscore methods
@@ -212,6 +220,21 @@ namespace underscore{
 				return f(std::get<0>(d),std::get<1>(d));
 			});
 			return underscore<std::vector<S>>(std::move(ret));
+		}
+		
+		/**
+		 * @short Flattens the application of a map that returns lists.
+		 * 
+		 * Example:
+		 * 	a=_({"Hello","world"}).flatMap<char>([](const std::string &s){ return _(s); }) == {'H','e','l','l','o',','w','o','r','l','d'}
+		 */
+		template<typename S>
+		underscore<std::vector<typename S::value_type>> flatMap(const std::function<S (const value_type &)> &f){
+			std::vector<typename S::value_type> ret;
+			for (auto &v: map(f)){
+				std::move(std::begin(v), std::end(v), std::back_inserter(ret));
+			}
+			return ret;
 		}
 		
 		/**

@@ -158,6 +158,29 @@ void t09_initialized_with_cstrings(){
 	END_LOCAL();
 };
 
+void t10_flatmap(){
+	INIT_LOCAL();
+
+	auto str=_({1,2,3,4,5})
+		.flatMap<range<int>>([](int i){ 
+			return make_range(0,i);
+		})
+		.join();
+	
+	FAIL_IF_NOT_EQUAL_STRING(str, "0, 0, 1, 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4");
+
+	auto str2=_({"Hello","world"})
+		.flatMap<std::string>([](const std::string &i){ 
+			return i;
+		})
+		.join();
+	
+	FAIL_IF_NOT_EQUAL_STRING(str2, "H, e, l, l, o, w, o, r, l, d");
+
+	
+	END_LOCAL();
+};
+
 int main(int argc, char **argv){
 	START();
 	
@@ -170,6 +193,7 @@ int main(int argc, char **argv){
 	t07_istream();
 	t08_range();
 	t09_initialized_with_cstrings();
+	t10_flatmap();
 	
 	END();
 }
