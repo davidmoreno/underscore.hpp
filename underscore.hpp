@@ -21,12 +21,95 @@
 #include <iostream>
 #include <sstream>
 #include <tuple>
+#include <boost/concept_check.hpp>
 
 namespace std{
 	std::string to_string(std::string str){ return str; }; // Need to copy it anyway, so no const &.
 };
 
 namespace underscore{
+	/**
+	 * @short Range between two iterators. 
+	 * 
+	 * WARNING Not all iterators can be used. Until more concept checking is in place, use it at your own risk. std::vector::iterators are safe.
+	 */
+	template<typename I>
+	class range{
+		I _begin;
+		I _end;
+	public:
+		typedef typename I::value_type value_type;
+		typedef I iterator;
+		
+		range(I begin, I end) : _begin(begin), _end(end) {}
+		range(I &&begin, I &&end) : _begin(begin), _end(end) {}
+		
+		iterator begin() const { return _begin; }
+		iterator end() const { return _end; }
+		value_type &at(size_t p){ return *(_begin+p); }
+		value_type at(size_t p) const { return *(_begin+p); }
+		size_t size() const { return _end-_begin; }
+		bool empty() const { return _begin==_end; }
+	};
+	
+	/**
+	 * @short Range between two numbers.
+	 * 
+	 * Allows easy create or runtime ranges:
+	 * 
+	 * 	auto a=_(0,1000).filter([](int n){ return n%2; }).join('<')
+	 */
+	template<>
+	class range<int>{
+	public:
+		typedef int value_type;
+		/**
+		 * @short To allow normal range operations many int operations must be reimplemented to simulate an iterator.
+		 */
+		class iterator{
+			value_type i;
+		public:
+			iterator(value_type n) : i(n) {}
+			value_type &operator*(){ return i; }
+			iterator &operator--(){ --i; return *this; }
+			iterator &operator++(){ ++i; return *this; }
+			iterator &operator+=(value_type n){ i+=n; return *this; }
+			iterator operator+(value_type n) const{ return iterator(i+n); }
+			iterator operator-(value_type n) const{ return iterator(i-n); }
+			
+			ssize_t operator-(const iterator &o) const{ return (i-o.i); }
+			bool operator==(const iterator &o) const{ return i==o.i; }
+			bool operator!=(const iterator &o) const{ return i!=o.i; }
+		};
+	private:
+		iterator _begin;
+		iterator _end;
+	public:
+		range(value_type begin, value_type end) : _begin(begin), _end(end){}
+		iterator begin() const { return _begin; }
+		iterator end() const { return _end; }
+		value_type &at(size_t p){ return *(_begin+p); }
+		value_type at(size_t p) const { return *(_begin+p); }
+		size_t size() const { return _end-_begin; }
+		bool empty() const { return _begin==_end; }
+	};
+	
+	/**
+	 * @short Wraps any container and add the underscore methods
+	 * 
+	 * With the underscore methods it is much easier to reason about the operations to do on the lists, 
+	 * and chain operations. For example, to print a list:
+	 * 
+	 * 	std::cout<<_({1,2,3,4,5}).join()<<std::endl;
+	 * 
+	 * To create cats:
+	 * 
+	 * 	auto catlist=_({1,2,3,4}).map<Cat>([](int n){ return Cat(n); })
+	 * 
+	 * It it itself a container, so it can be feed into another underscore (underscore<underscore<std::vector<int>>>, for example).
+	 * 
+	 * All normal operations as begin, end, size, count and empty are implemented. Then it adds many more to ease list based programming.
+	 */
 	template<typename T>
 	class underscore{
 		T _data;
@@ -42,7 +125,19 @@ namespace underscore{
 		
 		bool empty() const { return _data.empty(); }
 		size_t size() const { return _data.size(); }
+		size_t count() const { return _data.size(); }
 		
+		/**
+		 * @short Joins all elements of the list into a string
+		 * 
+		 * Each element pass by a std::to_string, and is separated by ", ".
+		 * 
+		 * Example:
+		 * 
+		 * 	_(1,6).join() == "1, 2, 3, 4, 5".
+		 * 
+		 * @param sep The separator string to use.
+		 */
 		std::string join(const std::string sep=", ") const{
 			if (empty())
 				return "";
@@ -59,12 +154,27 @@ namespace underscore{
 			return ret;
 		}
 		
+		/**
+		 * @short Filters out all the elements that do no comply to the condition.
+		 * 
+		 * The condition is a callable with signature "bool (const value_type &)". For example:
+		 * 
+		 * 	_({"red","green","blue"}).filter([](const std::string &s){ return !s.contains('r'); }) == {"blue"}
+		 */
 		underscore<T> filter(const std::function<bool (const value_type &)> &f) const{
 			underscore<T> ret;
 			ret._data.reserve(_data.size());
 			std::copy_if(_data.begin(), _data.end(), std::back_inserter(ret._data), f);
 			return ret;
 		}
+		
+		/**
+		 * @short Removes an element from the list
+		 * 
+		 * Uses value_type comparison to check if the elements are the same. If so, its removed from the list.
+		 * 
+		 * Returns a new list.
+		 */
 		underscore<T> remove(const value_type &v) const{
 			underscore<T> ret;
 			ret._data.reserve(_data.size());
@@ -72,6 +182,9 @@ namespace underscore{
 			return ret;
 		}
 
+		/**
+		 * @short Applies a mapping function to each element of the list, and return a new one.
+		 */
 		template<typename S>
 		underscore<std::vector<S>> map(const std::function<S (const value_type &)> &f) const{
 			std::vector<S> ret;
@@ -79,6 +192,11 @@ namespace underscore{
 			std::transform(_data.begin(),_data.end(), std::back_inserter(ret), f);
 			return underscore<std::vector<S>>(std::move(ret));
 		}
+		/**
+		 * @short Applies a mapping function to each element of the list, and return a new one. Tuple version.
+		 * 
+		 * The transformation function accepts 2 parameters, one for each element of the vector of tuples.
+		 */
 		template<typename S, typename A, typename B>
 		underscore<std::vector<S>> map(const std::function<S (const A &a, const B &b)> &f) const{
 			std::vector<S> ret;
@@ -89,6 +207,9 @@ namespace underscore{
 			return underscore<std::vector<S>>(std::move(ret));
 		}
 		
+		/**
+		 * @short Sorts the elements using default < comparison.
+		 */
 		underscore<T> sort() const{
 			std::vector<value_type> ret;
 			ret.reserve(size());
@@ -97,17 +218,35 @@ namespace underscore{
 			return ret;
 		}
 
+		/**
+		 * @short Returns a slice of the original list, starting at start until the end of the list.
+		 */
 		underscore<T> slice(ssize_t start) const{
 			return slice(start, size());
 		}
 
-		underscore<T> head(ssize_t end) const{
-			return slice(0,end);
+		/**
+		 * @short Returns the first n elements
+		 */
+		underscore<T> head(ssize_t count) const{
+			return slice(0,count);
 		}
-		underscore<T> tail(ssize_t end) const{
-			return slice(end,size());
+		/**
+		 * @short Returns the tail of the list, starting at start_at.
+		 */
+		underscore<T> tail(ssize_t start_at) const{
+			return slice(start_at,size());
 		}
 
+		/**
+		 * @short Returns a slice of the list, starting at start until end.
+		 * 
+		 * Both can be negative numbers that means to use size()-start or size()-end,
+		 * so that its possible to return operations with the size, without knowing it. 
+		 * For example:
+		 * 
+		 * 	_({1,2,3,4,5,6}).head(-1) == {1,2,3,4,5}.
+		 */
 		underscore<T> slice(ssize_t start, ssize_t end) const{
 			auto s=size();
 			std::vector<value_type> ret;
@@ -131,6 +270,9 @@ namespace underscore{
 			return ret;
 		}
 
+		/**
+		 * @short Reverses the list.
+		 */
 		underscore<T> reverse() const{
 			underscore<T> ret;
 			ret._data.reserve(size());
@@ -140,6 +282,14 @@ namespace underscore{
 			return ret;
 		}
 		
+		/**
+		 * @short Reduces the list: Applies a function on each element starting on the first, and an accumulation value
+		 * 
+		 * This way, for example it easy to sum all elements:
+		 * 
+		 * 	_({1,2,3,4,5}).reduce<int>([](int a, int b){ return a+b; }, 0) == 15
+		 * 
+		 */
 		template<typename S>
 		S reduce(const std::function<S (const value_type &, const S &)> &f, S initial=S()) const{
 			for(auto &v:_data){
@@ -147,29 +297,47 @@ namespace underscore{
 			}
 			return initial;
 		}
-		
+
+		/**
+		 * @short Returns the maximum element of the list.
+		 */
 		value_type max() const{
 			return reduce<value_type>([](const value_type &a, const value_type &b){ return std::max(a,b); });
 		}
+		/**
+		 * @short Returns the minimum element of the list.
+		 */
 		value_type min() const{
 			return reduce<value_type>([](const value_type &a, const value_type &b){ return std::min(a,b); }, _data[0]);
 		}
 		
+		/**
+		 * @short Finds the index where an element is. 
+		 * 
+		 * @returns index or -1 if not found.
+		 */
 		int find(const value_type &v, int first=0) const{
 			int s=size();
-			int i;
-			for(i=first;i<s;++i)
-				if (_data[i]==v)
+			int i=first;
+			auto I=begin()+first, endI=end();
+			for(;I!=endI;++I, ++i)
+				if (*I==v)
 					return i;
 			return -1;
 		}
-		
+
+		/**
+		 * @short Checks if any of the elements on the list satisfies the given condition.
+		 */
 		bool any(const std::function<bool(const value_type &)> &f) const{
 			for(auto &v:_data)
 				if (f(v))
 					return true;
 			return false;
 		}
+		/**
+		 * @short Checks if any element of the list has the given value.
+		 */
 		bool any(const value_type &v){
 			for(auto &i: _data)
 				if (i==v)
@@ -177,12 +345,18 @@ namespace underscore{
 			return false;
 		}
 		
+		/**
+		 * @short Checks if all elements of the list satisfiy the condition function.
+		 */
 		bool all(const std::function<bool(const value_type &)> &f) const{
 			for(auto &v:_data)
 				if (!f(v))
 					return false;
 			return true;
 		}
+		/**
+		 * @short Checks if all elements are equal to the given value.
+		 */
 		bool all(const value_type &v) const{
 			for(auto &i:_data)
 				if (i!=v)
@@ -191,6 +365,9 @@ namespace underscore{
 		}
 	};
 	
+	/**
+	 * @short Splits a string into a vector of strings, using sep as separator.
+	 */
 	underscore<std::vector<std::string>> __(const std::string &orig, const char &sep=','){
 		std::vector<std::string> v;
 		std::stringstream ss(orig);
@@ -200,7 +377,10 @@ namespace underscore{
 		}
 		return underscore<std::vector<std::string>>(std::move(v));
 	}
-	
+
+	/**
+	 * @short Gets all data from a istream, and set one line per element into a vector of strings.
+	 */
 	underscore<std::vector<std::string>> __(std::istream &&input){
 		std::vector<std::string> data;
 		std::string str;
@@ -211,20 +391,67 @@ namespace underscore{
 		return underscore<std::vector<std::string>>(std::move(data));
 	}
 	
+	/**
+	 * @short Creates an underscore container of the given value. It copies the data.
+	 * 
+	 * Example:
+	 * 	const std::vector<int> v{1,2,3,4};
+	 * 	auto a=_(v);
+	 */
 	template<typename T>
 	underscore<T> _(const T &v){
 		return underscore<T>(v);
 	}
+	/**
+	 * @short Creates an underscore container of the given value. Perfect forwarding version (std::move)
+	 * 
+	 * Example:
+	 * 	auto v=std::vector<int>{1,2,3,4};
+	 * 	auto a=_(std::move(v))
+	 * 
+	 * Or:
+	 * 
+	 * 	auto a=_(std::vector<int>{1,2,3,4});
+	 */
 	template<typename T>
 	underscore<T> _(T &&v){
 		return underscore<T>(std::forward<T>(v));
 	}
-	//template<>
-	underscore<std::vector<int>> _(std::initializer_list<int> &&v){
-		auto vv=std::vector<int>(std::forward<std::initializer_list<int>>(v));
-		return underscore<std::vector<int>>(vv);
+	/**
+	 * @short Creates an underscore container with a vector of the elements into the initializer list.
+	 * 
+	 * Allows creation directly as:
+	 * 
+	 * 	auto a=_({1,2,3,4})
+	 */
+	template<typename T>
+	underscore<std::vector<T>> _(std::initializer_list<T> &&v){
+		return underscore<std::vector<T>>(std::vector<T>(std::forward<std::initializer_list<T>>(v)));
 	}
 	
+	/**
+	 * @short Creates anunderscore container from two ranges. Useful for subranges.
+	 * 
+	 * It needs the ability to copy iterators.
+	 */
+	template<typename I>
+	underscore<range<I>> _(I &&begin, I &&end){
+		return _(range<I>(begin, end));
+	}
+	
+	/**
+	 * @short zips two lists into one of tuples
+	 * 
+	 * Example:
+	 * 	zip({1,2,3,4}, {'a','b','c','d'}) == {{1,'a'},{2,'b'},{3,'c'},{4,'d'}}
+	 * 
+	 * This version allows two standard containers
+	 * 
+	 * If the lists are uneven (diferent sizes) it creates new elements of the necesary type for the side with less elements:
+	 * 
+	 * Example: 
+	 * 	zip({1,2}, {'a','b','c','d'}) == {{1,'a'},{2,'b'},{0,'c'},{0,'d'}}
+	 */
 	template<typename A, typename B>
 	underscore<std::vector<std::tuple<typename A::value_type, typename B::value_type>>> zip(const A &a, const B &b){
 		typedef std::tuple<typename A::value_type, typename B::value_type> ret_t;
@@ -255,15 +482,30 @@ namespace underscore{
 		
 		return ret;
 	}
+	/**
+	 * @short zip two lists into a list of tuples.
+	 * 
+	 * Specialization with the first as a initializer list.
+	 */
 	template<typename A_t, typename B>
 	underscore<std::vector<std::tuple<A_t, typename B::value_type>>> zip(std::initializer_list<A_t> &&a, B &&b){
 		return zip(a, b);
 	}
+	/**
+	 * @short zip two lists into a list of tuples.
+	 * 
+	 * Specialization with the two as initializer list.
+	 */
 	template<typename A_t, typename B_t>
 	underscore<std::vector<std::tuple<A_t, B_t>>> zip(std::initializer_list<A_t> &&a, std::initializer_list<B_t>  &&b){
 		return zip(a, b);
 	}
 	template<typename A, typename B_t>
+	/**
+	 * @short zip two lists into a list of tuples.
+	 * 
+	 * Specialization with the second as a initializer list.
+	 */
 	underscore<std::vector<std::tuple<typename A::value_type, B_t>>> zip(A &&a, std::initializer_list<B_t>  &&b){
 		return zip(a, b);
 	}

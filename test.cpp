@@ -119,6 +119,31 @@ void t07_istream(){
 	END_LOCAL();
 }
 
+void t08_range(){
+	INIT_LOCAL();
+	
+	std::vector<int> a{1,2,3,4,5};
+
+//	auto r=range<std::vector<int>::iterator>(std::begin(a), std::end(a));
+	auto a_=_(std::begin(a), std::end(a));
+	FAIL_IF_NOT_EQUAL_STRING(a_.join(), "1, 2, 3, 4, 5");
+	
+	auto b_=_(1,6);
+	FAIL_IF_NOT_EQUAL_STRING(b_.join(), "1, 2, 3, 4, 5");
+	
+	END_LOCAL();
+}
+
+void t09_initialized_with_cstrings(){
+	INIT_LOCAL();
+	
+	FAIL_IF_NOT_EQUAL_STRING(
+		_({"red","green","blue"}).join(),
+		"red, green, blue"
+	);
+	
+	END_LOCAL();
+};
 
 int main(int argc, char **argv){
 	START();
@@ -130,6 +155,8 @@ int main(int argc, char **argv){
 	t05_iterators();
 	t06_zip();
 	t07_istream();
+	t08_range();
+	t09_initialized_with_cstrings();
 	
 	END();
 }
