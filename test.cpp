@@ -181,6 +181,14 @@ void t10_flatmap(){
 	END_LOCAL();
 };
 
+void t11_trim(){
+	INIT_LOCAL();
+	
+	FAIL_IF_NOT_EQUAL_STRING(_("   Hello, world   ").trim<std::string>(), "Hello, world")
+	
+	END_LOCAL();
+};
+
 int main(int argc, char **argv){
 	START();
 	
@@ -194,6 +202,7 @@ int main(int argc, char **argv){
 	t08_range();
 	t09_initialized_with_cstrings();
 	t10_flatmap();
+	t11_trim();
 	
 	END();
 }

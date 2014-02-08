@@ -21,10 +21,10 @@
 #include <iostream>
 #include <sstream>
 #include <tuple>
-#include <boost/concept_check.hpp>
+#include <map>
 
 namespace std{
-	std::string to_string(std::string str){ return str; }; // Need to copy it anyway, so no const &.
+	std::string to_string(const std::string &str){ return str; }; // Need to copy it anyway, so no const &.
 	std::string to_string(const char c){ char tmp[]={c,0}; return std::string(tmp); }; // Need to copy it anyway, so no const &.
 };
 
@@ -141,6 +141,8 @@ namespace underscore{
 		bool empty() const { return _data.empty(); }
 		size_t size() const { return _data.size(); }
 		size_t count() const { return _data.size(); }
+		
+		value_type &operator[](int p){ return _data[p]; }
 		
 		/**
 		 * @short Joins all elements of the list into a string
@@ -439,7 +441,17 @@ namespace underscore{
 			
 			return std::make_tuple(underscore<std::vector<A_t>>(std::move(A)),underscore<std::vector<B_t>>(std::move(B)));
 		}
+		
 
+		template<typename A_t,typename B_t>
+		std::map<A_t,B_t> to_map(){
+			std::map<A_t,B_t> map;
+			for(auto &t: _data){
+				map[std::get<0>(t)]=std::get<1>(t);
+			}
+			return map;
+		}
+	
 	};
 	
 	/**
@@ -514,6 +526,16 @@ namespace underscore{
 	template<typename I>
 	underscore<range<I>> _(I &&begin, I &&end){
 		return _(range<I>(begin, end));
+	}
+	
+	/**
+	 * @short Encapsulate a string.
+	 */
+	underscore<std::string> _(std::string &&s){
+		return underscore<std::string>(s);
+	}
+	underscore<std::string> _(const char *s){
+		return underscore<std::string>(s);
 	}
 	
 	/**
