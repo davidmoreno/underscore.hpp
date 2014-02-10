@@ -457,13 +457,46 @@ namespace underscore{
 	/**
 	 * @short Splits a string into a vector of strings, using sep as separator.
 	 */
-	underscore<std::vector<std::string>> __(const std::string &orig, const char &sep=','){
+	underscore<std::vector<std::string>> __(const std::string &orig, const char &sep=',', bool insert_empty_elements=false){
+		std::vector<std::string> v;
+		std::string el;
+		
+		auto I=orig.begin(), endI=orig.end();
+		std::string::const_iterator p;
+		do{
+			p=std::find(I, endI, sep);
+			
+			el=std::string(I, p);
+			if (insert_empty_elements || !el.empty())
+				v.push_back(el);
+			I=p+1;
+		}while(p!=endI);
+		
+		return underscore<std::vector<std::string>>(std::move(v));
+	}
+
+	/**
+	 * @short Splits a string into a vector of strings, using sep as separator.
+	 * 
+	 * This version looks for a string as separator, and is slightly less efficient than the one that looks for a char as separator.
+	 */
+	underscore<std::vector<std::string>> __(const std::string &orig, const std::string &sep, bool insert_empty_elements=false){
 		std::vector<std::string> v;
 		std::stringstream ss(orig);
 		std::string el;
-		while (std::getline(ss, el, sep)){
-			v.push_back(el);
-		}
+		
+		auto I=orig.begin(), endI=orig.end(), sepBegin=sep.begin(), sepEnd=sep.end();
+		std::string::const_iterator p;
+		
+		do{
+			p=std::search(I, endI, sepBegin, sepEnd);
+			
+			el=std::string(I, p);
+			if (insert_empty_elements || !el.empty())
+				v.push_back(el);
+			I=p+sep.size();
+		}while(p!=endI);
+		
 		return underscore<std::vector<std::string>>(std::move(v));
 	}
 
