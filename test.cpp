@@ -1,5 +1,6 @@
 #include "underscore.hpp"
 #include "ctest.h"
+#include "streams.hpp"
 
 #include <vector>
 #include <iostream>
@@ -181,6 +182,23 @@ void t10_flatmap(){
 	END_LOCAL();
 };
 
+void s01_streams(){
+	INIT_LOCAL();
+	
+	auto s=stream({"¡","Hola","Mundo","!"})
+		.filter([](const std::string &str){
+			return str.length()>2;
+		})
+		.map([](const std::string &str){
+			return std::string("Test ")+str;
+		});
+
+	for(auto v: s)
+		std::cout<<v<<std::endl;
+	
+	END_LOCAL();
+}
+
 int main(int argc, char **argv){
 	START();
 	
@@ -194,6 +212,8 @@ int main(int argc, char **argv){
 	t08_range();
 	t09_initialized_with_cstrings();
 	t10_flatmap();
+	
+	s01_streams();
 	
 	END();
 }
