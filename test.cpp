@@ -1,6 +1,7 @@
 #include "underscore.hpp"
 #include "ctest.h"
 #include "streams.hpp"
+#include "strings.hpp"
 
 #include <vector>
 #include <iostream>
@@ -127,9 +128,6 @@ void t07_istream(){
 								.head(5);
 	FAIL_IF_NOT_EQUAL_INT(first_5_services_sorted.size(),5);
 								
-	auto b=__("Hello, world").join("\n");
-	FAIL_IF_NOT_EQUAL_STRING(b, "Hello\n world");
-	
 	END_LOCAL();
 }
 
@@ -193,11 +191,84 @@ void s01_streams(){
 			return std::string("Test ")+str;
 		});
 
+	auto more=s.map([](const std::string &str){
+		return str+"!";
+	});
+	
+	s.filter([](const std::string &str){
+		return false;
+	});
+
 	for(auto v: s)
+		std::cout<<v<<std::endl;
+	for(auto v: more)
 		std::cout<<v<<std::endl;
 	
 	END_LOCAL();
 }
+
+void st01_strings(){
+	INIT_LOCAL();
+	
+	auto a=_("Hello world");
+	auto av=a.split(' ');
+	
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+		
+	av=_("   Hello    world   ").split(' ');
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+
+	av=_("   Hello    world").split(' ');
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+
+	av=_("Hello,world").split();
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+
+	av=_("Hello, world").split(", ");
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+
+	av=_("Hello  world").split(' ', true);
+	FAIL_IF_NOT_EQUAL_INT(av.size(), 3);
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "");
+	FAIL_IF_NOT_EQUAL_STRING(av[2], "world");
+	
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").lower(), "hello, world");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").upper(), "HELLO, WORLD");
+	
+	FAIL_IF_NOT_EQUAL(_("Hello, world").startswith("Hello"), true);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").startswith("Hella"), false);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").startswith(""), true);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith(""), true);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith("ad"), false);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith("world"), true);
+
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-1), "Hello, world");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-6), "Hello, ");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-7,-6), ", ");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,-1), "world");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,12), "world");
+
+	
+	END_LOCAL();
+};
+
+void st02_strings_underscore(){
+	INIT_LOCAL();
+	
+	auto v=_("Hello, world").split(", ").map<int>([](const std::string &s){
+		return s.size();
+	});
+	
+	FAIL_IF_NOT_EQUAL_STRING(v.join(", "), "5, 5"); // Count words on the splitted list.
+	
+	END_LOCAL();
+};
 
 int main(int argc, char **argv){
 	START();
@@ -214,6 +285,9 @@ int main(int argc, char **argv){
 	t10_flatmap();
 	
 	s01_streams();
+	
+	st01_strings();
+	st02_strings_underscore();
 	
 	END();
 }

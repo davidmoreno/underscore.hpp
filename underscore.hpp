@@ -29,6 +29,8 @@ namespace std{
 };
 
 namespace underscore{
+	class string;
+	
 	/**
 	 * @short Range between two iterators. 
 	 * 
@@ -455,19 +457,6 @@ namespace underscore{
 	};
 	
 	/**
-	 * @short Splits a string into a vector of strings, using sep as separator.
-	 */
-	underscore<std::vector<std::string>> __(const std::string &orig, const char &sep=','){
-		std::vector<std::string> v;
-		std::stringstream ss(orig);
-		std::string el;
-		while (std::getline(ss, el, sep)){
-			v.push_back(el);
-		}
-		return underscore<std::vector<std::string>>(std::move(v));
-	}
-
-	/**
 	 * @short Gets all data from a istream, and set one line per element into a vector of strings.
 	 */
 	underscore<std::vector<std::string>> __(std::istream &&input){
@@ -531,12 +520,8 @@ namespace underscore{
 	/**
 	 * @short Encapsulate a string.
 	 */
-	underscore<std::string> _(std::string &&s){
-		return underscore<std::string>(s);
-	}
-	underscore<std::string> _(const char *s){
-		return underscore<std::string>(s);
-	}
+	::underscore::string _(std::string &&s);
+	::underscore::string _(const char *s);
 	
 	/**
 	 * @short zips two lists into one of tuples

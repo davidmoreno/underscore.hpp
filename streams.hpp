@@ -42,7 +42,8 @@ namespace underscore{
 					return next->push_back(next_plan);
 			}
 			
-			virtual void operator()(basic_stream::value_type v) = 0;
+			virtual std::shared_ptr<plan_item> copy() = 0;
+			virtual void operator()(const basic_stream::value_type &v) = 0;
 		};
 		
 		class plan_filter : public plan_item{
@@ -50,18 +51,24 @@ namespace underscore{
 		public:
 			plan_filter(basic_stream::filter_f _f) : f(_f){}
 			
-			void operator()(basic_stream::value_type v){
+			void operator()(const basic_stream::value_type &v){
 				bool do_next=f(v);
 				if (do_next && next)
 				(*next)(v);
 			}
+			virtual std::shared_ptr<plan_item> copy() {
+				auto ret=std::make_shared<plan_filter>(f);
+				if (next)
+					ret->push_back(next->copy());
+				return ret;
+			};
 		};
 		class plan_map : public plan_item{
 			basic_stream::map_f f;
 		public:
 			plan_map(basic_stream::map_f _f) : f(_f){}
 			
-			void operator()(basic_stream::value_type v){
+			void operator()(const basic_stream::value_type &v){
 				auto nv=f(v);
 				if (next)
 					(*next)(nv);
@@ -70,11 +77,21 @@ namespace underscore{
 					throw(std::exception());
 				}
 			};
+			virtual std::shared_ptr<plan_item> copy() {
+				auto ret=std::make_shared<plan_map>(f);
+				if (next)
+					ret->push_back(next->copy());
+				return ret;
+			};
 		};
 	public:
 		std::shared_ptr<plan_item> plan;
 		
 		basic_stream(){};
+		virtual basic_stream &operator=(basic_stream &o){
+			plan=o.plan->copy();
+			return *this;
+		}
 		
 		basic_stream &filter(const filter_f &f){
 			std::shared_ptr<plan_item> next_plan=std::make_shared<plan_filter>(f);
@@ -118,8 +135,8 @@ namespace underscore{
 				}
 			};
 		public:
-			iterator(std::shared_ptr<plan_item> &plan, std::vector<value_type>::iterator &&current, std::vector<value_type>::iterator &&end) : 
-					_plan(plan), _current(current), _end(end), _computed(false)
+			iterator(const std::shared_ptr<plan_item> &plan, std::vector<value_type>::iterator &&current, std::vector<value_type>::iterator &&end) : 
+					_plan(plan->copy()), _current(current), _end(end), _computed(false)
 			{ 
 				_plan->push_back(std::make_shared<plan_filter>([this](const value_type &v) -> bool{
 					this->_computed=true;
@@ -138,20 +155,36 @@ namespace underscore{
 		};
 	private:
 		std::vector<value_type> _data;
+		
+		stream push_back(std::shared_ptr<plan_item> item) const {
+			stream ret(_data);
+			if (plan){
+				ret.plan=plan->copy();
+				ret.plan->push_back( item );
+			}
+			else{
+				ret.plan=item;
+			}
+			return ret;
+		}
 	public:
 		stream() = delete;
 		stream(const std::initializer_list<value_type> &data) : _data(data){};
+		stream(const std::vector<value_type> &data) : _data(data){};
+
+		virtual basic_stream &operator=(stream &o){
+			plan=o.plan->copy();
+			return *this;
+		}
 
 		iterator begin(){ return stream::iterator(plan, _data.begin(), _data.end()); }
 		iterator end(){ return stream::iterator(plan, _data.end(), _data.end()); }
 		
-		stream &filter(const filter_f &f){
-			basic_stream::filter(f);
-			return *this;
+		stream filter(const filter_f &f) const{
+			return push_back(std::make_shared<plan_filter>(f));
 		};
-		stream &map(const map_f &f){
-			basic_stream::map(f);
-			return *this;
+		stream map(const map_f &f) const{
+			return push_back(std::make_shared<plan_map>(f));
 		};
 		
 		// Finally performs to convert to vector
