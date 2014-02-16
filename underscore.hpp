@@ -457,19 +457,6 @@ namespace underscore{
 	};
 	
 	/**
-	 * @short Gets all data from a istream, and set one line per element into a vector of strings.
-	 */
-	underscore<std::vector<std::string>> __(std::istream &&input){
-		std::vector<std::string> data;
-		std::string str;
-		while (!input.eof()){
-			std::getline(input, str);
-			data.push_back(str);
-		}
-		return underscore<std::vector<std::string>>(std::move(data));
-	}
-	
-	/**
 	 * @short Creates an underscore container of the given value. It copies the data.
 	 * 
 	 * Example:

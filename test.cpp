@@ -2,6 +2,7 @@
 #include "ctest.h"
 #include "streams.hpp"
 #include "strings.hpp"
+#include "file.hpp"
 
 #include <vector>
 #include <iostream>
@@ -121,7 +122,7 @@ void t06_zip(){
 
 void t07_istream(){
 	INIT_LOCAL();
-	auto first_5_services_sorted=__(std::ifstream("/etc/services"))
+	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
 								.filter([](const std::string &s){ return !s.empty() && s[0]!='#'; })
 								.map<std::string>([](const std::string &s){ return s.substr(0,s.find(" ")); })
 								.sort()
@@ -270,6 +271,28 @@ void st02_strings_underscore(){
 	END_LOCAL();
 };
 
+void st03_strings_to(){
+	INIT_LOCAL();
+	
+	FAIL_IF_NOT_EQUAL(_("123").to_long(), 123);
+	FAIL_IF_NOT_EQUAL(_("123.0").to_float(), 123.0);
+	FAIL_IF_NOT_EQUAL(_("123").to_float(), 123);
+	FAIL_IF_NOT_EQUAL(_("123.5").to_float(), 123.5);
+	FAIL_IF_NOT_EQUAL(_("123.5").to_double(), 123.5);
+	
+	FAIL_IF_NOT_EXCEPTION( _("er").to_long() );
+	FAIL_IF_NOT_EXCEPTION( _("123 er").to_long() );
+	FAIL_IF_NOT_EXCEPTION( _("").to_long() );
+	FAIL_IF_NOT_EXCEPTION( _("123.0 es").to_float() );
+	FAIL_IF_NOT_EXCEPTION( _("es").to_float() );
+	FAIL_IF_NOT_EXCEPTION( _("").to_float() );
+	FAIL_IF_NOT_EXCEPTION( _("123.0 es").to_double() );
+	FAIL_IF_NOT_EXCEPTION( _("es").to_double() );
+	FAIL_IF_NOT_EXCEPTION( _("").to_double() );
+	
+	END_LOCAL();
+};
+
 int main(int argc, char **argv){
 	START();
 	
@@ -288,6 +311,7 @@ int main(int argc, char **argv){
 	
 	st01_strings();
 	st02_strings_underscore();
+	st03_strings_to();
 	
 	END();
 }

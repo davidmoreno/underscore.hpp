@@ -16,6 +16,7 @@
 
 #pragma once
 #include <string>
+#include <boost/concept_check.hpp>
 #include "underscore.hpp"
 
 namespace underscore{
@@ -117,6 +118,27 @@ namespace underscore{
 			return _str.substr(start, end-start);
 		}
 		
+		long to_long(){
+			size_t n;
+			long l=stol(_str, &n);
+			if (n!=_str.size())
+				throw std::invalid_argument(_str);
+			return l;
+		}
+		double to_double(){
+			size_t n;
+			double f=stod(_str, &n);
+			if (n!=_str.size())
+				throw std::invalid_argument(_str);
+			return f;
+		}
+		float to_float(){
+			size_t n;
+			float f=stof(_str, &n);
+			if (n!=_str.size())
+				throw std::invalid_argument(_str);
+			return f;
+		}
 	};
 	
 	string _(std::string &&s){
