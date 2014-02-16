@@ -120,18 +120,6 @@ void t06_zip(){
 	END_LOCAL();
 }
 
-void t07_istream(){
-	INIT_LOCAL();
-	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
-								.filter([](const std::string &s){ return !s.empty() && s[0]!='#'; })
-								.map<std::string>([](const std::string &s){ return s.substr(0,s.find(" ")); })
-								.sort()
-								.head(5);
-	FAIL_IF_NOT_EQUAL_INT(first_5_services_sorted.size(),5);
-								
-	END_LOCAL();
-}
-
 void t08_range(){
 	INIT_LOCAL();
 	
@@ -293,6 +281,18 @@ void st03_strings_to(){
 	END_LOCAL();
 };
 
+void f01_istream(){
+	INIT_LOCAL();
+	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
+								.filter([](const std::string &s){ return !s.empty() && s[0]!='#'; })
+								.map<std::string>([](const std::string &s){ return s.substr(0,s.find(" ")); })
+								.sort()
+								.head(5);
+	FAIL_IF_NOT_EQUAL_INT(first_5_services_sorted.size(),5);
+								
+	END_LOCAL();
+}
+
 int main(int argc, char **argv){
 	START();
 	
@@ -302,7 +302,6 @@ int main(int argc, char **argv){
 	t04_terminal_ops();
 	t05_iterators();
 	t06_zip();
-	t07_istream();
 	t08_range();
 	t09_initialized_with_cstrings();
 	t10_flatmap();
@@ -312,6 +311,8 @@ int main(int argc, char **argv){
 	st01_strings();
 	st02_strings_underscore();
 	st03_strings_to();
+
+	f01_istream();
 	
 	END();
 }
