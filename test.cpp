@@ -1,5 +1,8 @@
 #include "underscore.hpp"
 #include "ctest.h"
+#include "streams.hpp"
+#include "strings.hpp"
+#include "file.hpp"
 
 #include <vector>
 #include <iostream>
@@ -117,21 +120,6 @@ void t06_zip(){
 	END_LOCAL();
 }
 
-void t07_istream(){
-	INIT_LOCAL();
-	auto first_5_services_sorted=__(std::ifstream("/etc/services"))
-								.filter([](const std::string &s){ return !s.empty() && s[0]!='#'; })
-								.map<std::string>([](const std::string &s){ return s.substr(0,s.find(" ")); })
-								.sort()
-								.head(5);
-	FAIL_IF_NOT_EQUAL_INT(first_5_services_sorted.size(),5);
-								
-	auto b=__("Hello, world").join("\n");
-	FAIL_IF_NOT_EQUAL_STRING(b, "Hello\n world");
-	
-	END_LOCAL();
-}
-
 void t08_range(){
 	INIT_LOCAL();
 	
@@ -181,18 +169,128 @@ void t10_flatmap(){
 	END_LOCAL();
 };
 
-void t11_split(){
+void s01_streams(){
 	INIT_LOCAL();
 	
-	FAIL_IF_NOT_EQUAL_STRING( __(" Hello    world ", ' ').join(" "), "Hello world");
-	FAIL_IF_NOT_EQUAL_STRING( __(" Hello    world ", " ").join(" "), "Hello world");
-	FAIL_IF_NOT_EQUAL_STRING( __(" Hello    world ", ' ', true).join(" "), " Hello    world ");
-	FAIL_IF_NOT_EQUAL_STRING( __(" Hello    world ", " ", true).join(" "), " Hello    world ");
-	FAIL_IF_NOT_EQUAL_STRING( __(" Hello    world", ' ', true).join(" "), " Hello    world");
-	FAIL_IF_NOT_EQUAL_STRING( __("Hello, world", ", ").join(" "), "Hello world");
+	auto s=stream({"¡","Hola","Mundo","!"})
+		.filter([](const std::string &str){
+			return str.length()>2;
+		})
+		.map([](const std::string &str){
+			return std::string("Test ")+str;
+		});
+
+	auto more=s.map([](const std::string &str){
+		return str+"!";
+	});
+	
+	s.filter([](const std::string &str){
+		return false;
+	});
+
+	for(auto v: s)
+		std::cout<<v<<std::endl;
+	for(auto v: more)
+		std::cout<<v<<std::endl;
+	
+	END_LOCAL();
+}
+
+void st01_strings(){
+	INIT_LOCAL();
+	
+	auto a=_("Hello world");
+	auto av=a.split(' ');
+	
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+		
+	av=_("   Hello    world   ").split(' ');
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+
+	av=_("   Hello    world").split(' ');
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+
+	av=_("Hello,world").split();
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+
+	av=_("Hello, world").split(", ");
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "world");
+
+	av=_("Hello  world").split(' ', true);
+	FAIL_IF_NOT_EQUAL_INT(av.size(), 3);
+	FAIL_IF_NOT_EQUAL_STRING(av[0], "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(av[1], "");
+	FAIL_IF_NOT_EQUAL_STRING(av[2], "world");
+	
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").lower(), "hello, world");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").upper(), "HELLO, WORLD");
+	
+	FAIL_IF_NOT_EQUAL(_("Hello, world").startswith("Hello"), true);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").startswith("Hella"), false);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").startswith(""), true);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith(""), true);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith("ad"), false);
+	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith("world"), true);
+
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-1), "Hello, world");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-6), "Hello, ");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-7,-6), ", ");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,-1), "world");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,12), "world");
+
+	END_LOCAL();
+};
+
+void st02_strings_underscore(){
+	INIT_LOCAL();
+	
+	auto v=_("Hello, world").split(", ").map<int>([](const std::string &s){
+		return s.size();
+	});
+	
+	FAIL_IF_NOT_EQUAL_STRING(v.join(", "), "5, 5"); // Count words on the splitted list.
 	
 	END_LOCAL();
 };
+
+void st03_strings_to(){
+	INIT_LOCAL();
+	
+	FAIL_IF_NOT_EQUAL(_("123").to_long(), 123);
+	FAIL_IF_NOT_EQUAL(_("123.0").to_float(), 123.0);
+	FAIL_IF_NOT_EQUAL(_("123").to_float(), 123);
+	FAIL_IF_NOT_EQUAL(_("123.5").to_float(), 123.5);
+	FAIL_IF_NOT_EQUAL(_("123.5").to_double(), 123.5);
+	
+	FAIL_IF_NOT_EXCEPTION( _("er").to_long() );
+	FAIL_IF_NOT_EXCEPTION( _("123 er").to_long() );
+	FAIL_IF_NOT_EXCEPTION( _("").to_long() );
+	FAIL_IF_NOT_EXCEPTION( _("123.0 es").to_float() );
+	FAIL_IF_NOT_EXCEPTION( _("es").to_float() );
+	FAIL_IF_NOT_EXCEPTION( _("").to_float() );
+	FAIL_IF_NOT_EXCEPTION( _("123.0 es").to_double() );
+	FAIL_IF_NOT_EXCEPTION( _("es").to_double() );
+	FAIL_IF_NOT_EXCEPTION( _("").to_double() );
+	
+	END_LOCAL();
+};
+
+void f01_istream(){
+	INIT_LOCAL();
+	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
+								.filter([](const std::string &s){ return !s.empty() && s[0]!='#'; })
+								.map<std::string>([](const std::string &s){ return s.substr(0,s.find(" ")); })
+								.sort()
+								.head(5);
+	FAIL_IF_NOT_EQUAL_INT(first_5_services_sorted.size(),5);
+								
+	END_LOCAL();
+}
 
 int main(int argc, char **argv){
 	START();
@@ -203,11 +301,17 @@ int main(int argc, char **argv){
 	t04_terminal_ops();
 	t05_iterators();
 	t06_zip();
-	t07_istream();
 	t08_range();
 	t09_initialized_with_cstrings();
 	t10_flatmap();
-	t11_split();
+	
+	s01_streams();
+	
+	st01_strings();
+	st02_strings_underscore();
+	st03_strings_to();
+
+	f01_istream();
 	
 	END();
 }
