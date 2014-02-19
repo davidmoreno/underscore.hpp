@@ -454,6 +454,10 @@ namespace underscore{
 			return map;
 		}
 	
+		operator std::vector<value_type>(){
+			return _data;
+		}
+
 	};
 	
 	/**

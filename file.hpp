@@ -22,7 +22,7 @@ namespace underscore{
 	/**
 	 * @short Gets all data from a istream, and set one line per element into a vector of strings.
 	 */
-	underscore<std::vector<std::string>> file(std::istream &&input){
+	stream file(std::istream &&input){
 		std::vector<std::string> data;
 		std::string str;
 		while (!input.eof()){

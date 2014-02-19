@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#include "underscore.hpp"
 #include <vector>
 #include <iostream>
 #include <memory>
@@ -186,6 +187,26 @@ namespace underscore{
 		stream map(const map_f &f) const{
 			return push_back(std::make_shared<plan_map>(f));
 		};
+		
+		underscore<std::vector<value_type>> sort(){
+			return _( to_vector() ).sort();
+		}
+		underscore<std::vector<value_type>> head(ssize_t count){
+			if (count<0)
+				return _( to_vector() ).head(count);
+			
+			std::vector<value_type> ret;
+			filter( [&ret](const value_type &v) -> bool{
+				ret.push_back(v);
+				return false;
+			} );
+			for (const auto &v: _data){
+				if (ret.size()==count)
+					break;
+				do_plan(v);
+			}
+			return ret;
+		}
 		
 		// Finally performs to convert to vector
 		std::vector<value_type> to_vector(){

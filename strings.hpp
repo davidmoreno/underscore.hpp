@@ -24,6 +24,7 @@ namespace underscore{
 		std::string _str;
 	public:
 		string(std::string &&str) : _str(std::move(str)){};
+		string(const std::string &str) : _str(str){};
 		string(const char *str) : _str(str){};
 
 		::underscore::underscore<std::vector<std::string>> split(const char &sep=',', bool insert_empty_elements=false) const {
@@ -46,7 +47,6 @@ namespace underscore{
 		
 		::underscore::underscore<std::vector<std::string>> split(const std::string &sep, bool insert_empty_elements=false) const {
 			std::vector<std::string> v;
-			std::stringstream ss(_str);
 			std::string el;
 			
 			auto I=_str.begin(), endI=_str.end(), sepBegin=sep.begin(), sepEnd=sep.end();
