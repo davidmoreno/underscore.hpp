@@ -145,6 +145,7 @@ namespace underscore{
 		size_t count() const { return _data.size(); }
 		
 		value_type &operator[](int p){ return _data[p]; }
+		value_type operator[](int p) const{ return _data[p]; }
 		
 		/**
 		 * @short Joins all elements of the list into a string

@@ -22,13 +22,16 @@
 namespace underscore{
 	class string{
 		std::string _str;
+		
+		typedef ::underscore::underscore<std::vector<string>> string_list;
+		typedef std::vector<string> std_string_list;
 	public:
 		string(std::string &&str) : _str(std::move(str)){};
 		string(const std::string &str) : _str(str){};
 		string(const char *str) : _str(str){};
 
-		::underscore::underscore<std::vector<std::string>> split(const char &sep=',', bool insert_empty_elements=false) const {
-			std::vector<std::string> v;
+		string_list split(const char &sep=',', bool insert_empty_elements=false) const {
+			std_string_list v;
 			std::string el;
 			
 			std::string::const_iterator I=_str.begin(), endI=_str.end();
@@ -38,15 +41,15 @@ namespace underscore{
 				
 				el=std::string(I, p);
 				if (insert_empty_elements || !el.empty())
-					v.push_back(el);
+					v.push_back(std::move(el));
 				I=p+1;
 			}while(p!=endI);
 			
-			return underscore<std::vector<std::string>>(std::move(v));
+			return string_list(std::move(v));
 		}
 		
-		::underscore::underscore<std::vector<std::string>> split(const std::string &sep, bool insert_empty_elements=false) const {
-			std::vector<std::string> v;
+		string_list split(const std::string &sep, bool insert_empty_elements=false) const {
+			std_string_list v;
 			std::string el;
 			
 			auto I=_str.begin(), endI=_str.end(), sepBegin=sep.begin(), sepEnd=sep.end();
@@ -61,7 +64,7 @@ namespace underscore{
 				I=p+sep.size();
 			}while(p!=endI);
 			
-			return underscore<std::vector<std::string>>(std::move(v));
+			return string_list(std::move(v));
 		}
 		
 		string lower() const{
@@ -100,7 +103,7 @@ namespace underscore{
 		}
 		
 		string slice(ssize_t start, ssize_t end){
-			auto s=size();
+			ssize_t s=size();
 			if (end<0)
 				end=s+end+1;
 			if (end<0)
@@ -139,6 +142,12 @@ namespace underscore{
 				throw std::invalid_argument(_str);
 			return f;
 		}
+		
+		friend std::ostream& operator <<(std::ostream &output, const string &str) {
+			output << "" << str._str;
+			return output;
+		}
+
 	};
 	
 	string _(std::string &&s){
