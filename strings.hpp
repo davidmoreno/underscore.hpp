@@ -82,27 +82,31 @@ namespace underscore{
 			return string(std::move(ret));
 		};
 		
-		bool startswith(const std::string &starting){
+		bool startswith(const std::string &starting) const {
 			if (_str.size()<starting.size())
 				return false;
 			return (_str.substr(0,starting.size())==starting);
 		}
 		
-		bool endswith(const std::string &ending){
+		bool endswith(const std::string &ending) const {
 			if (_str.size()<ending.size())
 				return false;
 			return (_str.substr(_str.size()-ending.size())==ending);
 		}
 		
-		operator std::string(){
+		operator std::string() const{
 			return _str;
 		}
 		
-		size_t size(){ 
+		size_t size() const { 
 			return _str.size();
 		}
 		
-		string slice(ssize_t start, ssize_t end){
+		size_t length() const{
+			return size();
+		}
+		
+		string slice(ssize_t start, ssize_t end) const{
 			ssize_t s=size();
 			if (end<0)
 				end=s+end+1;
@@ -121,21 +125,21 @@ namespace underscore{
 			return _str.substr(start, end-start);
 		}
 		
-		long to_long(){
+		long to_long() const {
 			size_t n;
 			long l=stol(_str, &n);
 			if (n!=_str.size())
 				throw std::invalid_argument(_str);
 			return l;
 		}
-		double to_double(){
+		double to_double() const {
 			size_t n;
 			double f=stod(_str, &n);
 			if (n!=_str.size())
 				throw std::invalid_argument(_str);
 			return f;
 		}
-		float to_float(){
+		float to_float() const {
 			size_t n;
 			float f=stof(_str, &n);
 			if (n!=_str.size())
