@@ -17,8 +17,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "streams.hpp"
-#include "strings.hpp"
+#include "string.hpp"
 #include "underscore.hpp"
 
 namespace underscore{

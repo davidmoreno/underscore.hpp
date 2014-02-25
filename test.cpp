@@ -1,7 +1,7 @@
 #include "underscore.hpp"
 #include "ctest.h"
-#include "streams.hpp"
-#include "strings.hpp"
+#include "generator.hpp"
+#include "string.hpp"
 #include "file.hpp"
 
 #include <vector>
@@ -169,10 +169,10 @@ void t10_flatmap(){
 	END_LOCAL();
 };
 
-void s01_streams(){
+void g01_generator(){
 	INIT_LOCAL();
 	
-	auto s=stream({"¡","Hola","Mundo","!"})
+	auto s=generator({"¡","Hola","Mundo","!"})
 		.filter([](const std::string &str){
 			return str.length()>2;
 		})
@@ -305,7 +305,7 @@ int main(int argc, char **argv){
 	t09_initialized_with_cstrings();
 	t10_flatmap();
 	
-	s01_streams();
+	g01_generator();
 	
 	st01_strings();
 	st02_strings_underscore();

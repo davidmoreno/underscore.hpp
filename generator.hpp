@@ -17,12 +17,11 @@
 #pragma once
 #include "underscore.hpp"
 #include <vector>
-#include <iostream>
 #include <memory>
 
 namespace underscore{
 // 	template<typename T>
-	class basic_stream{
+	class basic_generator{
 	public:
 		typedef std::string value_type;
 		typedef std::function<bool (const value_type &)> filter_f;
@@ -44,15 +43,15 @@ namespace underscore{
 			}
 			
 			virtual std::shared_ptr<plan_item> copy() = 0;
-			virtual void operator()(const basic_stream::value_type &v) = 0;
+			virtual void operator()(const basic_generator::value_type &v) = 0;
 		};
 		
 		class plan_filter : public plan_item{
-			basic_stream::filter_f f;
+			basic_generator::filter_f f;
 		public:
-			plan_filter(basic_stream::filter_f _f) : f(_f){}
+			plan_filter(basic_generator::filter_f _f) : f(_f){}
 			
-			void operator()(const basic_stream::value_type &v){
+			void operator()(const basic_generator::value_type &v){
 				bool do_next=f(v);
 				if (do_next && next)
 				(*next)(v);
@@ -65,11 +64,11 @@ namespace underscore{
 			};
 		};
 		class plan_map : public plan_item{
-			basic_stream::map_f f;
+			basic_generator::map_f f;
 		public:
-			plan_map(basic_stream::map_f _f) : f(_f){}
+			plan_map(basic_generator::map_f _f) : f(_f){}
 			
-			void operator()(const basic_stream::value_type &v){
+			void operator()(const basic_generator::value_type &v){
 				auto nv=f(v);
 				if (next)
 					(*next)(nv);
@@ -88,22 +87,22 @@ namespace underscore{
 	public:
 		std::shared_ptr<plan_item> plan;
 		
-		basic_stream(){};
-		virtual basic_stream &operator=(basic_stream &o){
+		basic_generator(){};
+		virtual basic_generator &operator=(basic_generator &o){
 			plan=o.plan->copy();
 			return *this;
 		}
 		
-		basic_stream &filter(const filter_f &f){
+		basic_generator &filter(const filter_f &f){
 			std::shared_ptr<plan_item> next_plan=std::make_shared<plan_filter>(f);
 			return push_back( next_plan );
 		}
-		basic_stream &map(const map_f &f){
+		basic_generator &map(const map_f &f){
 			std::shared_ptr<plan_item> next_plan=std::make_shared<plan_map>(f);
 			return push_back( next_plan );
 		}
 		
-		basic_stream &push_back(std::shared_ptr<plan_item> next_plan){
+		basic_generator &push_back(std::shared_ptr<plan_item> next_plan){
 			if (plan)
 				plan->push_back(next_plan);
 			else
@@ -117,7 +116,7 @@ namespace underscore{
 		}
 	};
 	
-	class stream : public basic_stream{
+	class generator : public basic_generator{
 	public:
 		class iterator{
 			value_type _val;
@@ -157,8 +156,8 @@ namespace underscore{
 	private:
 		std::vector<value_type> _data;
 		
-		stream push_back(std::shared_ptr<plan_item> item) const {
-			stream ret(_data);
+		generator push_back(std::shared_ptr<plan_item> item) const {
+			generator ret(_data);
 			if (plan){
 				ret.plan=plan->copy();
 				ret.plan->push_back( item );
@@ -169,22 +168,22 @@ namespace underscore{
 			return ret;
 		}
 	public:
-		stream() = delete;
-		stream(const std::initializer_list<value_type> &data) : _data(data){};
-		stream(const std::vector<value_type> &data) : _data(data){};
+		generator() = delete;
+		generator(const std::initializer_list<value_type> &data) : _data(data){};
+		generator(const std::vector<value_type> &data) : _data(data){};
 
-		virtual basic_stream &operator=(stream &o){
+		virtual basic_generator &operator=(generator &o){
 			plan=o.plan->copy();
 			return *this;
 		}
 
-		iterator begin(){ return stream::iterator(plan, _data.begin(), _data.end()); }
-		iterator end(){ return stream::iterator(plan, _data.end(), _data.end()); }
+		iterator begin(){ return generator::iterator(plan, _data.begin(), _data.end()); }
+		iterator end(){ return generator::iterator(plan, _data.end(), _data.end()); }
 		
-		stream filter(const filter_f &f) const{
+		generator filter(const filter_f &f) const{
 			return push_back(std::make_shared<plan_filter>(f));
 		};
-		stream map(const map_f &f) const{
+		generator map(const map_f &f) const{
 			return push_back(std::make_shared<plan_map>(f));
 		};
 		
