@@ -16,19 +16,25 @@
 
 #pragma once
 #include <string>
+#include <vector>
 #include <boost/concept_check.hpp>
 #include "underscore.hpp"
 
 namespace underscore{
+	class string;
+	
+	typedef ::underscore::underscore<std::vector<string>> string_list;
+	typedef std::vector<string> std_string_list;
+	
 	class string{
 		std::string _str;
 		
-		typedef ::underscore::underscore<std::vector<string>> string_list;
-		typedef std::vector<string> std_string_list;
 	public:
+		
 		string(std::string &&str) : _str(std::move(str)){};
 		string(const std::string &str) : _str(str){};
 		string(const char *str) : _str(str){};
+		string() : _str(){};
 
 		string_list split(const char &sep=',', bool insert_empty_elements=false) const {
 			std_string_list v;
@@ -93,6 +99,9 @@ namespace underscore{
 				return false;
 			return (_str.substr(_str.size()-ending.size())==ending);
 		}
+		bool contains(const std::string &substr) const {
+			return _str.find(substr)!=std::string::npos;
+		}
 		
 		operator std::string() const{
 			return _str;
@@ -104,6 +113,10 @@ namespace underscore{
 		
 		size_t length() const{
 			return size();
+		}
+		
+		bool empty() const{
+			return _str.empty();
 		}
 		
 		string slice(ssize_t start, ssize_t end) const{

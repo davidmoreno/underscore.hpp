@@ -4,24 +4,22 @@
 #include <fstream>
 
 #include "../underscore.hpp"
-#include "../streams.hpp"
+#include "../generator.hpp"
+#include "../file.hpp"
 
 using namespace underscore;
 
 void using_underscore();
-void using_streams();
+void using_generator();
 void manual();
 
 int main(int argc, char **argv){
-	// Convert it all to a map. If several ports per service, only one.
-	//std::map<std::string, int> 
-	//using_underscore();
-	using_streams();
+	using_underscore();
+	using_generator();
 	manual();
 }
 
-void using_streams(){
-	stream<std::string> s;
+void using_generator(){
 	
 	
 }
@@ -66,32 +64,24 @@ void manual(){
 
 void using_underscore(){
 	auto services= 
-		__(std::ifstream("/etc/services"))
-			.map<std::string>([](const std::string &s){ // Remove comments, and trim
-				auto nocom=s.substr(0, s.find_first_of('#'));
-				auto i=nocom.find_first_not_of(' '); auto end=nocom.find_last_not_of(' ');
-				if (i==end)
-					return std::string();
-				return nocom.substr(i,end+1);
+		file(std::ifstream("/etc/services"))
+			.map<string>([](const string &s) -> string{ // Remove comments, and trim
+				auto r=s.split('#',true);
+				if (r.count()==0)
+					return string();
+				return r[0];
 			})
-			.filter([](const std::string &s){ // Remove empty lines
-				return !s.empty(); 
+			.filter([](const string &s){ // Remove empty lines and lines without /tcp
+				return s.contains("/tcp"); 
 			})
-			.map<std::tuple<std::string,std::string>>( // Prepare pairs, {service, port/type}
-				[](const std::string &s){
-					auto data=__(s,' ').remove("");
-					return std::make_tuple(data[0], data[1]);
+			.map<string_list>([](const string &s){  // Prepare pairs, {service, port/type}
+					return s.split(' ');
 			})
- 			.filter([](const std::tuple<std::string, std::string> &t){ // Only tcp ports
-				if (std::get<0>(t).empty() || std::get<1>(t).empty())
-					return false;
-				std::string port=std::get<1>(t);
-				return !port.empty() && port.substr(port.size()-4)=="/tcp";
+ 			.filter([](const string_list &t){ // Only tcp ports
+				return t[1].endswith("/tcp");
 			})
-			.map<std::pair<std::string, int>>([](const std::tuple<std::string, std::string> &t){ // Prepare pairs
-				std::string service=std::get<0>(t);
-				std::string port=std::get<1>(t);
-				return std::make_pair(service, stoi( port.substr(0,port.size()-4) ) );
+			.map<std::pair<std::string, int>>([](const string_list &t){ // Prepare pairs
+				return std::make_pair(t[0],  t[1].slice(0,-5).to_long() );
 			})
 			.to_map<std::string, int>() // And convert to map.
 			;
