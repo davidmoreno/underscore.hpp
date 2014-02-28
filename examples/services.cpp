@@ -65,7 +65,7 @@ void manual(){
 void using_underscore(){
 	std::map<std::string, int> services;
 	file(std::ifstream("/etc/services"))
-		.map([](const string &s) -> string{ // Remove comments, and trim
+		.map([](const string &s){ // Remove comments, and trim
 			auto r=s.split('#',true);
 			if (r.count()==0)
 				return string();

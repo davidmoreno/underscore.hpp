@@ -189,10 +189,10 @@ namespace underscore{
 
 	};
 	
-	string _(std::string &&s){
+	inline string _(std::string &&s){
 		return string(std::move(s));
 	}
-	string _(const char *s){
+	inline string _(const char *s){
 		return string(std::string(s));
 	}
 

@@ -24,8 +24,8 @@
 #include <map>
 
 namespace std{
-	std::string to_string(const std::string &str){ return str; }; // Need to copy it anyway, so no const &.
-	std::string to_string(const char c){ char tmp[]={c,0}; return std::string(tmp); }; // Need to copy it anyway, so no const &.
+	inline std::string to_string(const std::string &str){ return str; }; // Need to copy it anyway, so no const &.
+	inline std::string to_string(const char c){ char tmp[]={c,0}; return std::string(tmp); }; // Need to copy it anyway, so no const &.
 };
 
 namespace underscore{
@@ -100,10 +100,10 @@ namespace underscore{
 	};
 	
 	template<typename T>
-	range<T> make_range(T &&begin, T &&end){
+	inline range<T> make_range(T &&begin, T &&end){
 		return range<T>(std::forward(begin), std::forward(end));
 	}
-	range<int> make_range(int begin, int end){
+	inline range<int> make_range(int begin, int end){
 		return range<int>(begin, end);
 	}
 	
@@ -484,7 +484,7 @@ namespace underscore{
 	 * 	auto a=_(v);
 	 */
 	template<typename T>
-	underscore<T> _(const T &v){
+	inline underscore<T> _(const T &v){
 		return underscore<T>(v);
 	}
 	/**
@@ -499,7 +499,7 @@ namespace underscore{
 	 * 	auto a=_(std::vector<int>{1,2,3,4});
 	 */
 	template<typename T>
-	underscore<T> _(T &&v){
+	inline underscore<T> _(T &&v){
 		return underscore<T>(std::forward<T>(v));
 	}
 	/**
@@ -510,7 +510,7 @@ namespace underscore{
 	 * 	auto a=_({1,2,3,4})
 	 */
 	template<typename T>
-	underscore<std::vector<T>> _(std::initializer_list<T> &&v){
+	inline underscore<std::vector<T>> _(std::initializer_list<T> &&v){
 		return underscore<std::vector<T>>(std::vector<T>(std::forward<std::initializer_list<T>>(v)));
 	}
 	
@@ -520,7 +520,7 @@ namespace underscore{
 	 * It needs the ability to copy iterators.
 	 */
 	template<typename I>
-	underscore<range<I>> _(I &&begin, I &&end){
+	inline underscore<range<I>> _(I &&begin, I &&end){
 		return _(range<I>(begin, end));
 	}
 	
@@ -544,7 +544,7 @@ namespace underscore{
 	 * 	zip({1,2}, {'a','b','c','d'}) == {{1,'a'},{2,'b'},{0,'c'},{0,'d'}}
 	 */
 	template<typename A, typename B>
-	underscore<std::vector<std::tuple<typename A::value_type, typename B::value_type>>> zip(const A &a, const B &b){
+	inline underscore<std::vector<std::tuple<typename A::value_type, typename B::value_type>>> zip(const A &a, const B &b){
 		typedef std::tuple<typename A::value_type, typename B::value_type> ret_t;
 		std::vector<ret_t> ret;
 		ret.reserve(std::max(a.size(), b.size()));
@@ -579,7 +579,7 @@ namespace underscore{
 	 * Specialization with the first as a initializer list.
 	 */
 	template<typename A_t, typename B>
-	underscore<std::vector<std::tuple<A_t, typename B::value_type>>> zip(std::initializer_list<A_t> &&a, B &&b){
+	inline underscore<std::vector<std::tuple<A_t, typename B::value_type>>> zip(std::initializer_list<A_t> &&a, B &&b){
 		return zip(a, b);
 	}
 	/**
@@ -588,16 +588,16 @@ namespace underscore{
 	 * Specialization with the two as initializer list.
 	 */
 	template<typename A_t, typename B_t>
-	underscore<std::vector<std::tuple<A_t, B_t>>> zip(std::initializer_list<A_t> &&a, std::initializer_list<B_t>  &&b){
+	inline underscore<std::vector<std::tuple<A_t, B_t>>> zip(std::initializer_list<A_t> &&a, std::initializer_list<B_t>  &&b){
 		return zip(a, b);
 	}
-	template<typename A, typename B_t>
 	/**
 	 * @short zip two lists into a list of tuples.
 	 * 
 	 * Specialization with the second as a initializer list.
 	 */
-	underscore<std::vector<std::tuple<typename A::value_type, B_t>>> zip(A &&a, std::initializer_list<B_t>  &&b){
+	template<typename A, typename B_t>
+	inline underscore<std::vector<std::tuple<typename A::value_type, B_t>>> zip(A &&a, std::initializer_list<B_t>  &&b){
 		return zip(a, b);
 	}
 };
