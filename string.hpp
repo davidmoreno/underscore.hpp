@@ -103,6 +103,28 @@ namespace underscore{
 			return _str.find(substr)!=std::string::npos;
 		}
 		
+		string replace(const std::string &orig, const std::string &replace_with){
+			std::string ret=_str;
+			size_t pos = 0;
+			size_t orig_length = orig.length();
+			size_t replace_with_length = replace_with.length();
+			while((pos = ret.find(orig, pos)) != std::string::npos)
+			{
+				ret.replace(pos, orig_length, replace_with);
+				pos += replace_with_length;
+			}
+			return ret;
+		}
+		
+		/**
+		 * @short Removes all spaces, new lines and tabs from begining and end.
+		 */
+		string strip() const{
+			auto begin=_str.find_first_not_of(" \n\t");
+			auto end=_str.find_last_not_of(" \n\t");
+			return slice(begin, end+1);
+		}
+		
 		operator std::string() const{
 			return _str;
 		}

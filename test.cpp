@@ -280,6 +280,17 @@ void st03_strings_to(){
 	END_LOCAL();
 };
 
+void st04_strip(){
+	INIT_LOCAL();
+	
+	FAIL_IF_NOT_EQUAL_STRING(_("  Hello").strip(), "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello").strip(), "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(_("  Hello  ").strip(), "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello  ").strip(), "Hello");
+	
+	END_LOCAL();
+}
+
 void f01_istream(){
 	INIT_LOCAL();
 	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
@@ -310,6 +321,7 @@ int main(int argc, char **argv){
 	st01_strings();
 	st02_strings_underscore();
 	st03_strings_to();
+	st04_strip();
 
 	f01_istream();
 	

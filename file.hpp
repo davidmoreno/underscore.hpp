@@ -17,6 +17,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <fstream>
 #include "string.hpp"
 #include "underscore.hpp"
 
@@ -29,8 +30,15 @@ namespace underscore{
 		std::string str;
 		while (!input.eof()){
 			std::getline(input, str);
-			data.push_back(::underscore::string(str));
+			if (!str.empty() && !input.eof()) // No empty line if at end.
+				data.push_back(::underscore::string(str));
 		}
 		return data;
+	}
+	/**
+	 * @short Gets all data from a file, and set one line per element into a vector of strings.
+	 */
+	underscore<std::vector<::underscore::string>> file(const std::string &str){
+		return file(std::ifstream(str, std::ifstream::in));
 	}
 };
