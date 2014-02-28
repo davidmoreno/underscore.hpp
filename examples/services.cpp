@@ -63,28 +63,26 @@ void manual(){
 
 
 void using_underscore(){
-	auto services= 
-		file(std::ifstream("/etc/services"))
-			.map<string>([](const string &s) -> string{ // Remove comments, and trim
-				auto r=s.split('#',true);
-				if (r.count()==0)
-					return string();
-				return r[0];
-			})
-			.filter([](const string &s){ // Remove empty lines and lines without /tcp
-				return s.contains("/tcp"); 
-			})
-			.map<string_list>([](const string &s){  // Prepare pairs, {service, port/type}
-					return s.split(' ');
-			})
- 			.filter([](const string_list &t){ // Only tcp ports
-				return t[1].endswith("/tcp");
-			})
-			.map<std::pair<std::string, int>>([](const string_list &t){ // Prepare pairs
-				return std::make_pair(t[0],  t[1].slice(0,-5).to_long() );
-			})
-			.to_map<std::string, int>() // And convert to map.
-			;
+	std::map<std::string, int> services;
+	file(std::ifstream("/etc/services"))
+		.map([](const string &s) -> string{ // Remove comments, and trim
+			auto r=s.split('#',true);
+			if (r.count()==0)
+				return string();
+			return r[0];
+		})
+		.filter([](const string &s){ // Remove empty lines and lines without /tcp
+			return s.contains("/tcp"); 
+		})
+		.map<string_list>([](const string &s){  // Prepare pairs, {service, port/type}
+				return s.split(' ');
+		})
+		.filter([](const string_list &t){ // Only tcp ports
+			return t[1].endswith("/tcp");
+		})
+		.each([&services](const string_list &t){ // Prepare pairs
+			services[t[0]]=t[1].slice(0,-5).to_long();
+		});
 	
 	for(auto &s: {"http","ssh","telnet"} )
 		std::cout<<s<<" at tcp port "<<services[s]<<std::endl;

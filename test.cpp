@@ -28,6 +28,7 @@ void t02_ops(){
 	FAIL_IF_NOT_EQUAL_STRING(vv.filter([](int v){ return v%2; }).join(), "1, 3, 5");
 	FAIL_IF_NOT_EQUAL_STRING(vv.remove(5).join(), "1, 2, 3, 4");
 	FAIL_IF_NOT_EQUAL_STRING(vv.map<int>([](int v){ return v*2; }).join(), "2, 4, 6, 8, 10");
+	FAIL_IF_NOT_EQUAL_STRING(vv.map([](int v){ return v*3; }).join(), "3, 6, 9, 12, 15");
 	FAIL_IF_NOT_EQUAL_STRING(vv.reverse().join(), "5, 4, 3, 2, 1");
 	FAIL_IF_NOT_EQUAL_STRING(_({5,3,2,1,4}).sort().join(), vv.join());
 	

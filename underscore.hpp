@@ -226,6 +226,21 @@ namespace underscore{
 			});
 			return underscore<std::vector<S>>(std::move(ret));
 		}
+		/**
+		 * @short Applies a mapping function to each element of the list, and return a new one. Same value_type as source, simple transform.
+		 */
+		underscore<std::vector<value_type>> map(const std::function<value_type (const value_type &)> &f) const{
+			return map<value_type>(f);
+		}
+		
+		/**
+		 * @short Just executes a function on each element. Returns the same list.
+		 */
+		underscore<T> each(const std::function<void (const value_type &)> &f) const{
+			for(const auto &v: _data)
+				f(v);
+			return *this;
+		}
 		
 		/**
 		 * @short Flattens the application of a map that returns lists.
