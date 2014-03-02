@@ -292,6 +292,16 @@ void st04_strip(){
 	END_LOCAL();
 }
 
+void st05_format(){
+	INIT_LOCAL();
+	
+	FAIL_IF_NOT_EQUAL_STRING( _("One: {}, String: {}").format({1,"str"}), "One: 1, String: str");
+	FAIL_IF_NOT_EXCEPTION( _("One: {}, String: {}").format({1}));
+	FAIL_IF_NOT_EXCEPTION( _("One: {}, String: {}").format({1,"str","throw"}));
+	
+	END_LOCAL();
+}
+
 void f01_istream(){
 	INIT_LOCAL();
 	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
@@ -323,6 +333,7 @@ int main(int argc, char **argv){
 	st02_strings_underscore();
 	st03_strings_to();
 	st04_strip();
+	st05_format();
 
 	f01_istream();
 	

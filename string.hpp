@@ -34,6 +34,7 @@ namespace underscore{
 		string(std::string &&str) : _str(std::move(str)){};
 		string(const std::string &str) : _str(str){};
 		string(const char *str) : _str(str){};
+		template<typename T> string(const T &v) : _str(std::to_string(v)){};
 		string() : _str(){};
 
 		string_list split(const char &sep=',', bool insert_empty_elements=false) const {
@@ -158,6 +159,51 @@ namespace underscore{
 			if (start==0 && end==s)
 				return *this;
 			return _str.substr(start, end-start);
+		}
+		
+		string format(std::initializer_list<string> &&str_list){
+			auto ulist=string_list(str_list);
+// 			std::cout<<"as ulist "<<ulist.join(", ")<<std::endl;
+			return format(ulist);
+		}
+		
+		class invalid_format : public std::exception{
+		public:
+			const char *what() const throw(){ return "Invalid string format"; };
+		};
+		class invalid_format_require_more_arguments : public invalid_format{
+		public:
+			const char *what() const throw(){ return "Invalid string format, requires more arguments."; };
+		};
+		class invalid_format_too_many_arguments : public invalid_format{
+		public:
+			const char *what() const throw(){ return "Invalid string format, it has too many arguments."; };
+		};
+		
+		string format(const string_list &sl){
+			std::string ret;
+			auto res=size() + sl.reduce<size_t>([](const string &str, size_t s){ return s+str.size(); }, 0);
+// 			std::cout<<"reserve "<<res<<std::endl;
+			ret.reserve(res);
+			
+			int n=0;
+			auto sl_size=sl.size();
+			for (auto &part: split("{}", true)){
+				ret+=part;
+				if (n<sl_size){
+					ret+=sl[n];
+				}
+				else if (n>sl_size){
+					throw invalid_format_require_more_arguments();
+				}
+				// else is just enought aguments, so ok.
+				n++;
+// 				std::cout<<"format "<<ret<<std::endl;
+			}
+			if (n<=sl_size){
+				throw invalid_format_too_many_arguments();
+			}
+			return ret;
 		}
 		
 		long to_long() const {
