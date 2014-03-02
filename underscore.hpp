@@ -387,9 +387,9 @@ namespace underscore{
 		 * 
 		 * @returns index or -1 if not found.
 		 */
-		int find(const value_type &v, int first=0) const{
-			int s=size();
-			int i=first;
+		ssize_t find(const value_type &v, ssize_t first=0) const{
+			auto s=size();
+			auto i=first;
 			auto I=begin()+first, endI=end();
 			for(;I!=endI;++I, ++i)
 				if (*I==v)
