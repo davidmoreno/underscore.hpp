@@ -148,7 +148,7 @@ namespace underscore{
 				end=s+end+1;
 			if (end<0)
 				return std::string();
-			if (end>s)
+			if (end-s>0)
 				end=s;
 			if (start<0)
 				start=s+start;
@@ -186,8 +186,8 @@ namespace underscore{
 // 			std::cout<<"reserve "<<res<<std::endl;
 			ret.reserve(res);
 			
-			int n=0;
-			auto sl_size=sl.size();
+			signed long n=0;
+			signed long sl_size=sl.size();
 			for (auto &part: split("{}", true)){
 				ret+=part;
 				if (n<sl_size){
