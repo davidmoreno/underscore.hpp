@@ -24,7 +24,7 @@ public:
 
 class gen{
 public:
-	typedef std::function<std::string (std::string &&)> map_f;
+	typedef std::function<std::string (const std::string &)> map_f;
 	typedef std::function<bool (const std::string &)> filter_f;
 };
 
@@ -47,6 +47,10 @@ public:
 			throw ::eog();
 		return v[n++];
 	}
+	void process(const std::function<void (const std::string &)> &_next){
+		for(const auto &s: v)
+			_next(s);
+	}
 	
 	genmap<genlist> map(gen::map_f &&f);
 	genfilter<genlist> filter(gen::filter_f &&f);
@@ -56,12 +60,12 @@ public:
 template<typename Prev>
 class genmap{
 	Prev _prev;
-	gen::map_f _f;
 	typedef genmap<Prev> gen_type;
 public:
+	gen::map_f _f;
 	genmap(const gen::map_f &f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){};
 	genmap(gen_type &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
-	genmap(const gen_type &o) : _prev(o._prev), _f(o._f){};
+// 	genmap(const gen_type &o) : _prev(o._prev), _f(o._f){};
 	
 	bool eog(){
 		return _prev.eog();
@@ -69,6 +73,12 @@ public:
 	std::string get_next(){
 		return _f( this->_prev.get_next() );
 	}
+	void process(const std::function<void (const std::string &)> &_next){
+		_prev.process([this,&_next](const std::string &s){
+			_next(this->_f(s));
+		});
+	}
+	
 	genmap<gen_type> map(gen::map_f &&f){
 		return genmap<gen_type>(std::forward<gen::map_f>(f), std::move(*this));
 	}
@@ -80,12 +90,12 @@ public:
 template<typename Prev>
 class genfilter{
 	Prev _prev;
-	gen::filter_f _f;
 	typedef genfilter<Prev> gen_type;
 public:
+	gen::filter_f _f;
 	genfilter(gen::filter_f &&f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){}
 	genfilter(gen_type &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
-	genfilter(const gen_type &o) : _prev(o._prev), _f(o._f){};
+// 	genfilter(const gen_type &o) : _prev(o._prev), _f(o._f){};
 	
 	bool eog(){
 		return _prev.eog();
@@ -98,6 +108,13 @@ public:
 		}
 		throw ::eog();
 	};
+	void process(const std::function<void (const std::string &)> &_next){
+		_prev.process([this,&_next](const std::string &s){
+			if (this->_f(s))
+				_next(s);
+		});
+	}
+	
 	genmap<genfilter<Prev>> map(gen::map_f &&f){
 		return genmap<genfilter<Prev>>(std::forward<gen::map_f>(f), std::move(*this));
 	}
@@ -118,14 +135,20 @@ genfilter<genlist> genlist::filter(gen::filter_f &&f)
 template<typename T>
 std::vector<std::string> to_vector(T &gm){
 	std::vector<std::string> r;
-	while(!gm.eog()){
+#if 1
+	gm.process([&r](const std::string &s){
+		r.push_back(s);
+	});
+#else
+ 	while(!gm.eog()){
 		try{
 			r.push_back(gm.get_next());
 		}
-		catch(const eog &g){
+		catch(::eog &e){
 			return r;
 		}
 	}
+#endif
 	return r;
 }
 
@@ -140,7 +163,7 @@ int main(void){
 						.filter([](const std::string &s){
 							return s.length()>4;
 						})
-						.map([](std::string &&s){
+						.map([](const std::string &s){
 							return s;
 							})
 						.filter([](const std::string &s){
@@ -152,7 +175,10 @@ int main(void){
 		;
 // 	auto gl=genlist({"Hola","Mundo",""})
 // 		.filter([](const std::string &str){
-// 			return str.empty();
+// 			return !str.empty();
+// 		})
+// 		.map([](const std::string &str){
+// 			return str+"...";
 // 		})
 // 	;
 	auto v=to_vector(gl);
