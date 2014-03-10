@@ -233,6 +233,9 @@ namespace underscore{
 			return output;
 		}
 
+		bool operator==(const std::string &str){
+			return _str==str;
+		}
 	};
 	
 	inline string _(std::string &&s){
