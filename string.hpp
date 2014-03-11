@@ -175,7 +175,7 @@ namespace underscore{
 			return p;
 		}
 
-		ssize_t rindex(char c, ssize_t start, ssize_t end=-1) const{
+		ssize_t rindex(char c, ssize_t start=0, ssize_t end=-1) const{
 			start=_wrap_position(start); end=_wrap_position(end);
 			for(int i=end;i>=start;--i)
 				if (_str[i]==c)
@@ -183,12 +183,12 @@ namespace underscore{
 				return -1;
 		}
 
-		ssize_t rindex(const std::string &s, ssize_t start, ssize_t end=-1) const{
+		ssize_t rindex(const std::string &s, ssize_t start=0, ssize_t end=-1) const{
 			start=_wrap_position(start); end=_wrap_position(end);
-			auto p=_str.rfind(s.c_str(), start, end);
+			auto p=slice(start,end)._str.rfind(s);
 			if (p==std::string::npos)
 				return -1;
-			return p;
+			return start+p;
 		}
 
 		string slice(ssize_t start, ssize_t end=-1) const{

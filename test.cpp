@@ -302,6 +302,20 @@ void st05_format(){
 	END_LOCAL();
 }
 
+void st06_index(){
+	INIT_LOCAL();
+	
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").index(','), 5);
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").rindex(','), 5);
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").rindex(',',7,-1), -1);
+
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").index(", "), 5);
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").rindex(", ",-100, -1), 5);
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").rindex(", ",-4,-1), -1);
+	
+	END_LOCAL();
+}
+
 void f01_istream(){
 	INIT_LOCAL();
 	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
@@ -334,6 +348,7 @@ int main(int argc, char **argv){
 	st03_strings_to();
 	st04_strip();
 	st05_format();
+	st06_index();
 
 	f01_istream();
 	
