@@ -30,7 +30,7 @@ namespace underscore{
 		std::string _str;
 		
 		
-		ssize_t _wrap_position(ssize_t p) const{
+		ssize_t _wrap_start_position(ssize_t p) const{
 			ssize_t s=size();
 			if (p>s)
 				return s;
@@ -41,6 +41,17 @@ namespace underscore{
 				return p;
 			}
 			return p;
+		}
+		/// Ranges are open at the end [a,b), so it must just return 1 more than the start, if <0.
+		ssize_t _wrap_end_position(ssize_t p) const{
+			if (p<0)
+				return _wrap_start_position(p)+1;
+			else{
+				ssize_t s=size();
+				if (p>s)
+					return s;
+				return p;
+			}
 		}
 	public:
 		
@@ -136,7 +147,7 @@ namespace underscore{
 		string strip() const{
 			auto begin=_str.find_first_not_of(" \n\t");
 			auto end=_str.find_last_not_of(" \n\t");
-			return slice(begin, end);
+			return slice(begin, end+1);
 		}
 		
 		operator std::string() const{
@@ -176,7 +187,7 @@ namespace underscore{
 		}
 
 		ssize_t rindex(char c, ssize_t start=0, ssize_t end=-1) const{
-			start=_wrap_position(start); end=_wrap_position(end);
+			start=_wrap_start_position(start); end=_wrap_end_position(end);
 			for(int i=end;i>=start;--i)
 				if (_str[i]==c)
 					return i;
@@ -184,7 +195,7 @@ namespace underscore{
 		}
 
 		ssize_t rindex(const std::string &s, ssize_t start=0, ssize_t end=-1) const{
-			start=_wrap_position(start); end=_wrap_position(end);
+			start=_wrap_start_position(start); end=_wrap_end_position(end);
 			auto p=slice(start,end)._str.rfind(s);
 			if (p==std::string::npos)
 				return -1;
@@ -192,8 +203,8 @@ namespace underscore{
 		}
 
 		string slice(ssize_t start, ssize_t end=-1) const{
-			end=_wrap_position(end)+1;
-			start=_wrap_position(start);
+			start=_wrap_start_position(start);
+			end=_wrap_end_position(end);
 			if (end<start)
 				return string();
 			ssize_t s=size();

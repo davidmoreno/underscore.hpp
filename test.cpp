@@ -239,8 +239,9 @@ void st01_strings(){
 	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith("world"), true);
 
 	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-1), "Hello, world");
-	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-6), "Hello, ");
-	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-7,-6), ", ");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-7), "Hello,");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(5,6), ",");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-7,-7), ",");
 	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,-1), "world");
 	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,12), "world");
 
