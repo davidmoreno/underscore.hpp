@@ -168,27 +168,45 @@ namespace underscore{
 				return -1;
 			return p;
 		}
+		ssize_t index(char c, ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
+			start=_wrap_position(start); end=_wrap_position(end);
+			return slice(start, end).index(c) + start;
+		}
+
 		ssize_t index(const std::string &s) const{
 			auto p=_str.find(s);
 			if (p==std::string::npos)
 				return -1;
 			return p;
 		}
+		ssize_t index(const std::string &s, ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
+			start=_wrap_position(start); end=_wrap_position(end);
+			return slice(start, end).index(s) + start;
+		}
 
-		ssize_t rindex(char c, ssize_t start=0, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
+		ssize_t rindex(char c, ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
 			start=_wrap_position(start); end=_wrap_position(end);
 			for(int i=end;i>=start;--i)
 				if (_str[i]==c)
 					return i;
-				return -1;
+			return -1;
 		}
-
-		ssize_t rindex(const std::string &s, ssize_t start=0, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
-			start=_wrap_position(start); end=_wrap_position(end);
-			auto p=slice(start,end)._str.rfind(s);
+		ssize_t rindex(char c) const{
+			auto p=_str.rfind(c);
 			if (p==std::string::npos)
 				return -1;
-			return start+p;
+			return p;
+		}
+
+		ssize_t rindex(const std::string &s, ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
+			start=_wrap_position(start); end=_wrap_position(end);
+			return slice(start,end).rindex(s);
+		}
+		ssize_t rindex(const std::string &s) const{
+			auto p=_str.rfind(s);
+			if (p==std::string::npos)
+				return -1;
+			return p;
 		}
 
 		string slice(ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
