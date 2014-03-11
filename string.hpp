@@ -29,6 +29,19 @@ namespace underscore{
 	class string{
 		std::string _str;
 		
+		
+		ssize_t _wrap_position(ssize_t p) const{
+			ssize_t s=size();
+			if (p>s)
+				return s;
+			if (p<0){
+				p=s+p;
+				if (p<0)
+					return 0;
+				return p;
+			}
+			return p;
+		}
 	public:
 		
 		string(std::string &&str) : _str(std::move(str)){};
@@ -104,7 +117,7 @@ namespace underscore{
 			return _str.find(substr)!=std::string::npos;
 		}
 		
-		string replace(const std::string &orig, const std::string &replace_with){
+		string replace(const std::string &orig, const std::string &replace_with) const{
 			std::string ret=_str;
 			size_t pos = 0;
 			size_t orig_length = orig.length();
@@ -123,7 +136,7 @@ namespace underscore{
 		string strip() const{
 			auto begin=_str.find_first_not_of(" \n\t");
 			auto end=_str.find_last_not_of(" \n\t");
-			return slice(begin, end+1);
+			return slice(begin, end);
 		}
 		
 		operator std::string() const{
@@ -142,25 +155,66 @@ namespace underscore{
 			return _str.empty();
 		}
 		
-		string slice(ssize_t start, ssize_t end) const{
+		const char *c_str() const{
+			return _str.c_str();
+		}
+		
+		/**
+		 * @short Returns the index of the first ocurrence of that char, or -1.
+		 */
+		ssize_t index(char c) const{
+			auto p=_str.find(c);
+			if (p==std::string::npos)
+				return -1;
+			return p;
+		}
+		ssize_t index(const std::string &s) const{
+			auto p=_str.find(s);
+			if (p==std::string::npos)
+				return -1;
+			return p;
+		}
+
+		ssize_t rindex(char c, ssize_t start, ssize_t end=-1) const{
+			start=_wrap_position(start); end=_wrap_position(end);
+			for(int i=end;i>=start;--i)
+				if (_str[i]==c)
+					return i;
+				return -1;
+		}
+
+		ssize_t rindex(const std::string &s, ssize_t start, ssize_t end=-1) const{
+			start=_wrap_position(start); end=_wrap_position(end);
+			auto p=_str.rfind(s.c_str(), start, end);
+			if (p==std::string::npos)
+				return -1;
+			return p;
+		}
+
+		string slice(ssize_t start, ssize_t end=-1) const{
+			end=_wrap_position(end)+1;
+			start=_wrap_position(start);
+			if (end<start)
+				return string();
 			ssize_t s=size();
-			if (end<0)
-				end=s+end+1;
-			if (end<0)
-				return std::string();
-			if (end-s>0)
-				end=s;
-			if (start<0)
-				start=s+start;
-			if (start<0)
-				start=0;
-			if (start>s)
-				return std::string();
 			if (start==0 && end==s)
 				return *this;
 			return _str.substr(start, end-start);
 		}
-		
+
+		string format(const string &a){
+			return format({a});
+		}
+		string format(const string &a, const string &b){
+			return format({a,b});
+		}
+		string format(const string &a, const string &b, const string &c){
+			return format({a,b,c});
+		}
+		string format(const string &a, const string &b, const string &c, const string &d){
+			return format({a,b,c,d});
+		}
+
 		string format(std::initializer_list<string> &&str_list){
 			auto ulist=string_list(str_list);
 // 			std::cout<<"as ulist "<<ulist.join(", ")<<std::endl;
@@ -237,6 +291,17 @@ namespace underscore{
 			return _str==str;
 		}
 	};
+	
+	inline bool operator==(const std::string &a, const string &b){
+		return b==a;
+	}
+	inline bool operator<(const string &a, const string &b){
+		return std::string(a)<std::string(b);
+	}
+	
+	inline string operator+(const string &a, const string &b){
+		return std::string(a)+std::string(b);
+	}
 	
 	inline string _(std::string &&s){
 		return string(std::move(s));

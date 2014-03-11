@@ -269,6 +269,17 @@ namespace underscore{
 		}
 		
 		/**
+		 * @short Sorts the elements using default < comparison.
+		 */
+		underscore<std::vector<value_type>> sort(const std::function<bool (const value_type &,const value_type &)> &lessThan) const{
+			std::vector<value_type> ret;
+			ret.reserve(size());
+			std::copy(_data.begin(), _data.end(), std::back_inserter(ret));
+			std::sort(ret.begin(), ret.end(), lessThan);
+			return ret;
+		}
+		
+		/**
 		 * @short Returns a list with the same elements only once, in the same order.
 		 * 
 		 * Complexity O(N²). 
