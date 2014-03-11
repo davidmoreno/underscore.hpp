@@ -126,6 +126,20 @@ namespace underscore{
 	template<typename T>
 	class underscore{
 		T _data;
+		
+		ssize_t _wrap_position(ssize_t p) const{
+			ssize_t s=size();
+			if (p>s)
+				return s;
+			if (p<0){
+				p=s+p;
+				if (p<0)
+					return 0;
+				return p;
+			}
+			return p;
+		}
+	public:
 		typedef typename T::value_type value_type;
 		typedef typename T::iterator iterator;
 		typedef typename T::const_iterator const_iterator;
@@ -301,51 +315,21 @@ namespace underscore{
 		}
 
 		/**
-		 * @short Returns a slice of the original list, starting at start until the end of the list.
-		 */
-		underscore<T> slice(ssize_t start) const{
-			return slice(start, size());
-		}
-
-		/**
-		 * @short Returns the first n elements
-		 */
-		underscore<T> head(ssize_t count) const{
-			return slice(0,count);
-		}
-		/**
-		 * @short Returns the tail of the list, starting at start_at.
-		 */
-		underscore<T> tail(ssize_t start_at) const{
-			return slice(start_at,size());
-		}
-
-		/**
 		 * @short Returns a slice of the list, starting at start until end.
 		 * 
 		 * Both can be negative numbers that means to use size()-start or size()-end,
 		 * so that its possible to return operations with the size, without knowing it. 
 		 * For example:
 		 * 
-		 * 	_({1,2,3,4,5,6}).head(-1) == {1,2,3,4,5}.
+		 * 	_({1,2,3,4,5,6}).slice(-1) == {1,2,3,4,5}.
 		 */
-		underscore<T> slice(ssize_t start, ssize_t end) const{
+		underscore<T> slice(ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
+			start=_wrap_position(start);
+			end=_wrap_position(end);
 			auto s=size();
-			std::vector<value_type> ret;
-			if (end<0)
-				end=s+end;
-			if (end<0)
-				return ret;
-			if (end>s)
-				end=s;
-			if (start<0)
-				start=s+start;
-			if (start<0)
-				start=0;
-			if (start>s)
-				return ret;
 			if (start==0 && end==s)
 				return *this;
+			std::vector<value_type> ret;
 			
 			ret.reserve(end-start);
 			std::copy(_data.begin()+start, _data.begin()+end, std::back_inserter(ret));

@@ -192,7 +192,7 @@ namespace underscore{
 		}
 		underscore<std::vector<value_type>> head(ssize_t count){
 			if (count<0)
-				return _( to_vector() ).head(count);
+				return _( to_vector() ).slice(0,count);
 			
 			std::vector<value_type> ret;
 			filter( [&ret](const value_type &v) -> bool{

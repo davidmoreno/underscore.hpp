@@ -50,10 +50,10 @@ void t03_slice(){
 	INIT_LOCAL();
 	const auto vv = _({1,2,3,4,5});
 
-	FAIL_IF_NOT_EQUAL_STRING(vv.head(2).join(),"1, 2");
-	FAIL_IF_NOT_EQUAL_STRING(vv.head(-2).join(),"1, 2, 3");
-	FAIL_IF_NOT_EQUAL_STRING(vv.tail(2).join(),"3, 4, 5");
-	FAIL_IF_NOT_EQUAL_STRING(vv.tail(-2).join(),"4, 5");
+	FAIL_IF_NOT_EQUAL_STRING(vv.slice(0,2).join(),"1, 2");
+	FAIL_IF_NOT_EQUAL_STRING(vv.slice(0,-2).join(),"1, 2, 3");
+	FAIL_IF_NOT_EQUAL_STRING(vv.slice(2).join(),"3, 4, 5");
+	FAIL_IF_NOT_EQUAL_STRING(vv.slice(-2).join(),"4, 5");
 	FAIL_IF_NOT_EQUAL_STRING(vv.slice(1,2).join(),"2");
 	END_LOCAL();
 }
@@ -324,7 +324,7 @@ void f01_istream(){
 								.filter([](const std::string &s){ return !s.empty() && s[0]!='#'; })
 								.map<std::string>([](const std::string &s){ return s.substr(0,s.find(" ")); })
 								.sort()
-								.head(5);
+								.slice(0,5);
 	FAIL_IF_NOT_EQUAL_INT(first_5_services_sorted.size(),5);
 								
 	END_LOCAL();
