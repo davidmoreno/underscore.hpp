@@ -17,6 +17,7 @@
 #pragma once
 #include <fstream>
 #include <string>
+#include <memory>
 #include "generator.hpp"
 
 namespace underscore{
@@ -27,11 +28,11 @@ namespace underscore{
 		file(const std::string &filename) : ifs(new std::ifstream(filename, std::ifstream::in)) { 
 		}
 		
-		bool eog(){
+		bool empty(){
 			return ifs->eof();
 		}
 		std::string get_next(){
-			if (eog())
+			if (empty())
 				throw ::underscore::eog();
 			std::getline(*ifs, next);
 			return next;

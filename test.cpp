@@ -173,7 +173,7 @@ void t10_flatmap(){
 void g01_generator(){
 	INIT_LOCAL();
 	
-	auto s=generator({"¡","Hola","Mundo","!"})
+	auto s=vector({"¡","Hola","Mundo","!"})
 		.filter([](const std::string &str){
 			return str.length()>2;
 		})
@@ -320,9 +320,9 @@ void st06_index(){
 
 void f01_istream(){
 	INIT_LOCAL();
-	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
+	auto first_5_services_sorted=file("/etc/services")
 								.filter([](const std::string &s){ return !s.empty() && s[0]!='#'; })
-								.map<std::string>([](const std::string &s){ return s.substr(0,s.find(" ")); })
+								.map([](const std::string &s){ return s.substr(0,s.find(" ")); })
 								.sort()
 								.slice(0,5);
 	FAIL_IF_NOT_EQUAL_INT(first_5_services_sorted.size(),5);

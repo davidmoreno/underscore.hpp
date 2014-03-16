@@ -17,6 +17,7 @@
 #pragma once
 #include <algorithm>
 #include <boost/concept_check.hpp>
+#include "underscore.hpp"
 
 namespace underscore{
 	class eog : public std::exception{
@@ -65,7 +66,7 @@ namespace underscore{
 		typedef std::function<std::string (const std::string &)> map_f;
 		typedef std::function<bool (const std::string &)> filter_f;
 		
-		virtual bool eog() = 0;
+		virtual bool empty() = 0;
 		virtual std::string get_next() = 0;
 		
 		iterator begin(){ return iterator(this); }
@@ -74,17 +75,24 @@ namespace underscore{
 		genmap<T> map(map_f &&f);
 		genfilter<T> filter(filter_f &&f);
 		
+		
+		/// Going to list world.
 		operator std::vector<std::string>(){
 			std::vector<std::string> r;
-			while(!eog()){
-				try{
+			try{
+				while(!empty()){
 					r.push_back(get_next());
 				}
-				catch(::underscore::eog &e){
-					return r;
-				}
+			}
+			catch(::underscore::eog &e){
 			}
 			return r;
+		}
+		
+		::underscore::underscore<std::vector<std::string>> sort(){
+			std::vector<std::string> v=*this;
+			std::sort(std::begin(v), std::end(v));
+			return v;
 		}
 		
 	};
@@ -98,8 +106,8 @@ namespace underscore{
 		genmap(const generator<void>::map_f &f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){};
 		genmap(genmap<Prev> &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
 
-		bool eog(){
-			return _prev.eog();
+		bool empty(){
+			return _prev.empty();
 		}
 		std::string get_next(){
 			return _f( this->_prev.get_next() );
@@ -114,11 +122,11 @@ namespace underscore{
 		genfilter(generator<void>::filter_f &&f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){}
 		genfilter(genfilter<Prev> &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
 		
-		bool eog(){
-			return _prev.eog();
+		bool empty(){
+			return _prev.empty();
 		}
 		std::string get_next(){
-			while(!eog()){
+			while(!empty()){
 				auto v=_prev.get_next();
 				if (_f(v))
 					return v;
@@ -146,11 +154,11 @@ namespace underscore{
 		vector(const std::vector<std::string> &strl) : v(strl), n(0) {}
 		vector(vector &&o) : v(std::move(o.v)), n(o.n) {}
 
-		bool eog(){
+		bool empty(){
 			return (n>=v.size());
 		}
 		std::string get_next(){
-			if (eog())
+			if (empty())
 				throw ::underscore::eog();
 			return v[n++];
 		}
