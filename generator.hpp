@@ -172,7 +172,7 @@ namespace underscore{
 	/// specific generators
 	class vector : public generator<vector>{
 		std::vector<std::string> v;
-		int n;
+		size_t n;
 	public:
 		vector(const std::vector<std::string> &strl) : v(strl), n(0) {}
 		vector(vector &&o) : v(std::move(o.v)), n(o.n) {}
