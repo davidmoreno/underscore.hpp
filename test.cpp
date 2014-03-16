@@ -50,10 +50,10 @@ void t03_slice(){
 	INIT_LOCAL();
 	const auto vv = _({1,2,3,4,5});
 
-	FAIL_IF_NOT_EQUAL_STRING(vv.head(2).join(),"1, 2");
-	FAIL_IF_NOT_EQUAL_STRING(vv.head(-2).join(),"1, 2, 3");
-	FAIL_IF_NOT_EQUAL_STRING(vv.tail(2).join(),"3, 4, 5");
-	FAIL_IF_NOT_EQUAL_STRING(vv.tail(-2).join(),"4, 5");
+	FAIL_IF_NOT_EQUAL_STRING(vv.slice(0,2).join(),"1, 2");
+	FAIL_IF_NOT_EQUAL_STRING(vv.slice(0,-2).join(),"1, 2, 3");
+	FAIL_IF_NOT_EQUAL_STRING(vv.slice(2).join(),"3, 4, 5");
+	FAIL_IF_NOT_EQUAL_STRING(vv.slice(-2).join(),"4, 5");
 	FAIL_IF_NOT_EQUAL_STRING(vv.slice(1,2).join(),"2");
 	END_LOCAL();
 }
@@ -238,10 +238,12 @@ void st01_strings(){
 	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith("ad"), false);
 	FAIL_IF_NOT_EQUAL(_("Hello, world").endswith("world"), true);
 
-	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-1), "Hello, world");
-	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-6), "Hello, ");
-	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-7,-6), ", ");
-	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,-1), "world");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,10000), "Hello, world");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(0,-7), "Hello");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(5,6), ",");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-7,-7), "");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-7,-6), ",");
+	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,-1), "worl");
 	FAIL_IF_NOT_EQUAL_STRING(_("Hello, world").slice(-5,12), "world");
 
 	END_LOCAL();
@@ -302,13 +304,27 @@ void st05_format(){
 	END_LOCAL();
 }
 
+void st06_index(){
+	INIT_LOCAL();
+	
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").index(','), 5);
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").rindex(','), 5);
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").rindex(',',7,-1), -1);
+
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").index(", "), 5);
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").rindex(", ",-100, -1), 5);
+	FAIL_IF_NOT_EQUAL_INT(_("Hello, world").rindex(", ",-4,-1), -1);
+	
+	END_LOCAL();
+}
+
 void f01_istream(){
 	INIT_LOCAL();
 	auto first_5_services_sorted=file(std::ifstream("/etc/services"))
 								.filter([](const std::string &s){ return !s.empty() && s[0]!='#'; })
 								.map<std::string>([](const std::string &s){ return s.substr(0,s.find(" ")); })
 								.sort()
-								.head(5);
+								.slice(0,5);
 	FAIL_IF_NOT_EQUAL_INT(first_5_services_sorted.size(),5);
 								
 	END_LOCAL();
@@ -334,6 +350,7 @@ int main(int argc, char **argv){
 	st03_strings_to();
 	st04_strip();
 	st05_format();
+	st06_index();
 
 	f01_istream();
 	
