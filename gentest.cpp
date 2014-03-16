@@ -2,31 +2,15 @@
 #include <string>
 #include <iostream>
 #include <utility>
-#include <boost/graph/graph_concepts.hpp>
+#include <fstream>
+#include <iostream>
+#include <memory>
 
 #include "underscore.hpp"
 #include "string.hpp"
+#include "generator.hpp"
 
-class eog : public std::exception{
-};
-
-template<typename Prev>
-class genmap;
-
-template<typename Prev>
-class genfilter;
-
-template<typename T>
-class genbase{
-public:
-	using gen_type=T;
-};
-
-class gen{
-public:
-	typedef std::function<std::string (const std::string &)> map_f;
-	typedef std::function<bool (const std::string &)> filter_f;
-};
+using namespace underscore;
 
 class genlist : public genbase<genlist>{
 	std::vector<std::string> v;
@@ -52,90 +36,63 @@ public:
 			_next(s);
 	}
 	
-	genmap<genlist> map(gen::map_f &&f);
-	genfilter<genlist> filter(gen::filter_f &&f);
+	genmap<genlist> map(genbase<void>::map_f &&f);
+	genfilter<genlist> filter(genbase<void>::filter_f &&f);
 };
 
-
-template<typename Prev>
-class genmap{
-	Prev _prev;
-	typedef genmap<Prev> gen_type;
+class genfile : public genbase<genfile>{
+	std::unique_ptr<std::ifstream> ifs; // Workaround no &&ifstream in gcc 4.8 as in http://stackoverflow.com/questions/12015899/why-are-move-semantics-for-a-class-containing-a-stdstringstream-causing-compil
+	std::string next; // To reuse lines.
 public:
-	gen::map_f _f;
-	genmap(const gen::map_f &f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){};
-	genmap(gen_type &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
-// 	genmap(const gen_type &o) : _prev(o._prev), _f(o._f){};
+// 	genfile(std::ifstream &&_ifs) : ifs(_ifs){
+// 	}
+	
+	genfile(const std::string &filename) : ifs(new std::ifstream(filename, std::ifstream::in)) { 
+	}
+	genfile(genfile &&o){
+		ifs=std::move(o.ifs);
+	}
 	
 	bool eog(){
-		return _prev.eog();
+		return ifs->eof();
 	}
 	std::string get_next(){
-		return _f( this->_prev.get_next() );
-	}
-	void process(const std::function<void (const std::string &)> &_next){
-		_prev.process([this,&_next](const std::string &s){
-			_next(this->_f(s));
-		});
-	}
-	
-	genmap<gen_type> map(gen::map_f &&f){
-		return genmap<gen_type>(std::forward<gen::map_f>(f), std::move(*this));
-	}
-	genfilter<gen_type> filter(gen::filter_f &&f){
-		return genfilter<gen_type>(std::forward<gen::filter_f>(f), std::move(*this));
-	}
-};
-
-template<typename Prev>
-class genfilter{
-	Prev _prev;
-	typedef genfilter<Prev> gen_type;
-public:
-	gen::filter_f _f;
-	genfilter(gen::filter_f &&f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){}
-	genfilter(gen_type &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
-// 	genfilter(const gen_type &o) : _prev(o._prev), _f(o._f){};
-	
-	bool eog(){
-		return _prev.eog();
-	}
-	std::string get_next(){
-		while(!eog()){
-			auto v=_prev.get_next();
-			if (_f(v))
-				return v;
-		}
-		throw ::eog();
+		if (eog())
+			throw ::eog();
+		std::getline(*ifs, next);
+		return next;
 	};
-	void process(const std::function<void (const std::string &)> &_next){
-		_prev.process([this,&_next](const std::string &s){
-			if (this->_f(s))
-				_next(s);
-		});
-	}
-	
-	genmap<genfilter<Prev>> map(gen::map_f &&f){
-		return genmap<genfilter<Prev>>(std::forward<gen::map_f>(f), std::move(*this));
-	}
-	genfilter<genfilter<Prev>> filter(gen::filter_f &&f){
-		return genfilter<genfilter<Prev>>(std::forward<gen::filter_f>(f), std::move(*this));
-	}
+	genmap<genfile> map(genbase<void>::map_f &&f);
+	genfilter<genfile> filter(genbase<void>::filter_f &&f);
 };
 
-genmap<genlist> genlist::map(gen::map_f &&f)
+
+
+
+genmap<genlist> genlist::map(genbase<void>::map_f &&f)
 {
-		return genmap<genlist>(std::forward<gen::map_f>(f), std::move(*this));
+	return genmap<genlist>(std::forward<genbase<void>::map_f>(f), std::move(*this));
 }
-genfilter<genlist> genlist::filter(gen::filter_f &&f)
+
+genfilter<genlist> genlist::filter(genbase<void>::filter_f &&f)
 {
-	return genfilter<genlist>(std::forward<gen::filter_f>(f), std::move(*this));
+	return genfilter<genlist>(std::forward<genbase<void>::filter_f>(f), std::move(*this));
+}
+
+genmap<genfile> genfile::map(genbase<void>::map_f &&f)
+{
+	return genmap<genfile>(std::forward<genbase<void>::map_f>(f), std::move(*this));
+}
+
+genfilter<genfile> genfile::filter(genbase<void>::filter_f &&f)
+{
+	return genfilter<genfile>(std::forward<genbase<void>::filter_f>(f), std::move(*this));
 }
 
 template<typename T>
-std::vector<std::string> to_vector(T &gm){
+std::vector<std::string> to_vector(T &&gm){
 	std::vector<std::string> r;
-#if 1
+#if 0
 	gm.process([&r](const std::string &s){
 		r.push_back(s);
 	});
@@ -187,4 +144,25 @@ int main(void){
 	for(auto &c: v)
 		std::cout<<c<<", ";
 	std::cout<<"]"<<std::endl;
+	
+	
+	for (auto &c:genfile("/etc/services")
+				.map([](const ::underscore::string &str) -> std::string{
+// 					std::cout<<&str<<std::endl;
+					if (str.contains('#'))
+						return str.slice(0,str.index('#')).strip();
+					return str;
+				})
+				.filter([](const ::underscore::string &str){ 
+// 					std::cout<<&str<<std::endl;
+					return !str.empty() && str.endswith("/tcp"); 
+				})
+				.map([](const ::underscore::string &str) -> std::string{
+					return str.slice(0,-4);
+				})
+			){
+		std::cout<<c<<std::endl;
+	}
+	
+	
 }

@@ -116,6 +116,9 @@ namespace underscore{
 		bool contains(const std::string &substr) const {
 			return _str.find(substr)!=std::string::npos;
 		}
+		bool contains(char c) const {
+			return _str.find(c)!=std::string::npos;
+		}
 		
 		string replace(const std::string &orig, const std::string &replace_with) const{
 			std::string ret=_str;
