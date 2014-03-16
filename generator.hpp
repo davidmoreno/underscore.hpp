@@ -95,6 +95,29 @@ namespace underscore{
 			return v;
 		}
 		
+		genfilter<gen_type> slice(ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()){
+			class slicer{
+				ssize_t start;
+				ssize_t end;
+				
+				ssize_t i;
+			public:
+				slicer(ssize_t _start, ssize_t _end) : start(_start), end(_end), i(0) {}
+				bool operator()(const std::string &ignore){
+					std::cout<<"Check "<<i<<" ("<<start<<","<<end<<")"<<std::endl;
+					if (i>=start){
+						i++;
+						if (i>=end)
+							throw ::underscore::eog();
+						return true;
+					}
+					return false;
+				}
+			};
+			
+			return filter(slicer(start, end));
+		}
+		
 	};
 
 

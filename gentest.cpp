@@ -43,7 +43,7 @@ int main(void){
 	
 	
 	int n=0;
-	for (auto &c:file("/etc/services")
+	auto gen=file("/etc/services")
 				.map([](const ::underscore::string &str) -> std::string{
 // 					std::cout<<&str<<std::endl;
 					if (str.contains('#'))
@@ -56,10 +56,13 @@ int main(void){
 				})
 				.map([](const ::underscore::string &str) -> std::string{
 					return str.slice(0,-4);
-				})
-			){
+				});
+	for(auto &c: gen.slice(0,5)){
 		n++;
 	}
 	std::cout<<n<<std::endl;
-	
+// 	for(auto &c: gen.slice(0,5)){
+// 		n++;
+// 	}
+// 	std::cout<<n<<std::endl;
 }
