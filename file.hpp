@@ -15,30 +15,26 @@
  */
 
 #pragma once
-#include <vector>
-#include <string>
 #include <fstream>
-#include "string.hpp"
-#include "underscore.hpp"
+#include <string>
+#include "generator.hpp"
 
 namespace underscore{
-	/**
-	 * @short Gets all data from a istream, and set one line per element into a vector of strings.
-	 */
-	inline underscore<std::vector<::underscore::string>> file(std::istream &&input){
-		std::vector<::underscore::string> data;
-		std::string str;
-		while (!input.eof()){
-			std::getline(input, str);
-			if (!str.empty() && !input.eof()) // No empty line if at end.
-				data.push_back(::underscore::string(str));
+	class file : public generator<file>{
+		std::unique_ptr<std::ifstream> ifs; // Workaround no &&ifstream in gcc 4.8 as in http://stackoverflow.com/questions/12015899/why-are-move-semantics-for-a-class-containing-a-stdstringstream-causing-compil
+		std::string next; // To reuse lines.
+	public:
+		file(const std::string &filename) : ifs(new std::ifstream(filename, std::ifstream::in)) { 
 		}
-		return data;
-	}
-	/**
-	 * @short Gets all data from a file, and set one line per element into a vector of strings.
-	 */
-	inline underscore<std::vector<::underscore::string>> file(const std::string &str){
-		return file(std::ifstream(str, std::ifstream::in));
-	}
+		
+		bool eog(){
+			return ifs->eof();
+		}
+		std::string get_next(){
+			if (eog())
+				throw ::underscore::eog();
+			std::getline(*ifs, next);
+			return next;
+		};
+	};
 };

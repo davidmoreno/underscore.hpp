@@ -8,7 +8,8 @@ test.o: test.cpp underscore.hpp generator.hpp string.hpp
 
 test: test.o
 
+gentest.o: gentest.cpp generator.hpp string.hpp
 
 clean:
-	rm -rf *.o test *~
+	rm -rf *.o test *~ gentest
 	

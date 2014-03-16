@@ -28,90 +28,91 @@ namespace underscore{
 	template<typename Prev>
 	class genfilter;
 
-	template<typename G>
-	class iterator{
-		G *parent;
-		std::string current;
-	public:
-		iterator(G *_parent) : parent(_parent){}
-		iterator() : parent(nullptr){}
-		
-		const std::string &operator*(){
-			return current;
-		}
-		iterator<G> operator++(){
-			try{
-				if (parent)
-					current=parent->get_next();
-			}
-			catch(eog &g){
-				current="";
-				parent=NULL;
-			}
-			return *this;
-		}
-		
-		bool operator!=(const iterator<G> &other){
-			return parent!=other.parent;
-		}
-	};
-	
 	template<typename T>
-	class genbase{
+	class generator{
 	public:
+		class iterator{
+		public:
+			using parent_type=generator<T>;
+		private:
+			parent_type *parent;
+			std::string current;
+		public:
+			iterator(parent_type *_parent) : parent(_parent){}
+			iterator() : parent(nullptr){}
+			
+			const std::string &operator*(){
+				return current;
+			}
+			iterator &operator++(){
+				try{
+					if (parent)
+						current=parent->get_next();
+				}
+				catch(::underscore::eog &g){
+					current="";
+					parent=NULL;
+				}
+				return *this;
+			}
+			
+			bool operator!=(const iterator &other){
+				return parent!=other.parent;
+			}
+		};
+
 		using gen_type=T;
+		typedef std::function<std::string (const std::string &)> map_f;
+		typedef std::function<bool (const std::string &)> filter_f;
 		
 		virtual bool eog() = 0;
 		virtual std::string get_next() = 0;
 		
-		iterator<gen_type> begin(){ return iterator<gen_type>(this); }
-		iterator<gen_type> end(){ return iterator<gen_type>(); }
+		iterator begin(){ return iterator(this); }
+		iterator end(){ return iterator(); }
 		
-		typedef std::function<std::string (const std::string &)> map_f;
-		typedef std::function<bool (const std::string &)> filter_f;
+		genmap<T> map(map_f &&f);
+		genfilter<T> filter(filter_f &&f);
+		
+		operator std::vector<std::string>(){
+			std::vector<std::string> r;
+			while(!eog()){
+				try{
+					r.push_back(get_next());
+				}
+				catch(::underscore::eog &e){
+					return r;
+				}
+			}
+			return r;
+		}
+		
 	};
 
 
 	template<typename Prev>
-	class genmap{
+	class genmap : public generator<genmap<Prev>>{
 		Prev _prev;
-		typedef genmap<Prev> gen_type;
 	public:
-		genbase<void>::map_f _f;
-		genmap(const genbase<void>::map_f &f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){};
-		genmap(gen_type &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
-		
-		iterator<gen_type> begin(){ return iterator<gen_type>(this); }
-		iterator<gen_type> end(){ return iterator<gen_type>(); }
-		
+		generator<void>::map_f _f;
+		genmap(const generator<void>::map_f &f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){};
+		genmap(genmap<Prev> &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
+
 		bool eog(){
 			return _prev.eog();
 		}
 		std::string get_next(){
 			return _f( this->_prev.get_next() );
 		}
-		
-		genmap<gen_type> map(genbase<void>::map_f &&f){
-			return genmap<gen_type>(std::forward<genbase<void>::map_f>(f), std::move(*this));
-		}
-		genfilter<gen_type> filter(genbase<void>::filter_f &&f){
-			return genfilter<gen_type>(std::forward<genbase<void>::filter_f>(f), std::move(*this));
-		}
 	};
 
 	template<typename Prev>
-	class genfilter{
+	class genfilter : public generator<genfilter<Prev>>{
 		Prev _prev;
-		typedef genfilter<Prev> gen_type;
 	public:
-		genbase<void>::filter_f _f;
-		genfilter(genbase<void>::filter_f &&f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){}
-		genfilter(gen_type &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
-	// 	genfilter(const gen_type &o) : _prev(o._prev), _f(o._f){};
-
-		iterator<gen_type> begin(){ return iterator<gen_type>(this); }
-		iterator<gen_type> end(){ return iterator<gen_type>(); }
-		
+		generator<void>::filter_f _f;
+		genfilter(generator<void>::filter_f &&f, Prev &&prev) : _prev(std::forward<Prev>(prev)), _f(f){}
+		genfilter(genfilter<Prev> &&o) : _prev(std::move(o._prev)), _f(std::move(o._f)){};
 		
 		bool eog(){
 			return _prev.eog();
@@ -124,13 +125,37 @@ namespace underscore{
 			}
 			throw ::underscore::eog();
 		};
-		
-		genmap<genfilter<Prev>> map(genbase<void>::map_f &&f){
-			return genmap<genfilter<Prev>>(std::forward<genbase<void>::map_f>(f), std::move(*this));
+	};
+	
+	
+	template<typename T>
+	genmap<T> generator<T>::map(map_f &&f){
+		return genmap<T>(std::forward<map_f>(f), std::move(*reinterpret_cast<T*>(this)));
+	}
+	template<typename T>
+	genfilter<T> generator<T>::filter(filter_f &&f){
+		return genfilter<T>(std::forward<filter_f>(f), std::move(*reinterpret_cast<T*>(this)));
+	}
+	
+	
+	/// specific generators
+	class vector : public generator<vector>{
+		std::vector<std::string> v;
+		int n;
+	public:
+		vector(const std::vector<std::string> &strl) : v(strl), n(0) {}
+		vector(vector &&o) : v(std::move(o.v)), n(o.n) {}
+
+		bool eog(){
+			return (n>=v.size());
 		}
-		genfilter<genfilter<Prev>> filter(genbase<void>::filter_f &&f){
-			return genfilter<genfilter<Prev>>(std::forward<genbase<void>::filter_f>(f), std::move(*this));
+		std::string get_next(){
+			if (eog())
+				throw ::underscore::eog();
+			return v[n++];
 		}
 	};
+	
+	
 };
 
