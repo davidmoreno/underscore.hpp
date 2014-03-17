@@ -34,12 +34,12 @@ namespace underscore{
 	public:
 		class iterator{
 		public:
-			using parent_type=generator<T>;
+			using generator_type=T;
 		private:
-			parent_type *parent;
+			generator_type *parent;
 			std::string current;
 		public:
-			iterator(parent_type *_parent) : parent(_parent){}
+			iterator(generator_type *_parent) : parent(_parent){}
 			iterator() : parent(nullptr){}
 			
 			const std::string &operator*(){
@@ -66,10 +66,17 @@ namespace underscore{
 		typedef std::function<std::string (const std::string &)> map_f;
 		typedef std::function<bool (const std::string &)> filter_f;
 		
-		virtual bool empty() = 0;
-		virtual std::string get_next() = 0;
+		bool empty(){
+			throw std::runtime_error("Need to implement empty in your generator");
+		};
+		std::string get_next(){
+			throw std::runtime_error("Need to implement get_next in your generator");
+		};
 		
-		iterator begin(){ return iterator(this); }
+		iterator begin(){ 
+			gen_type *self=(gen_type*)this;
+			return iterator(self); 
+		}
 		iterator end(){ return iterator(); }
 		
 		genmap<T> map(map_f &&f);
@@ -79,9 +86,10 @@ namespace underscore{
 		/// Going to list world.
 		operator std::vector<std::string>(){
 			std::vector<std::string> r;
+			gen_type *self=(gen_type*)this;
 			try{
-				while(!empty()){
-					r.push_back(get_next());
+				while(!self->empty()){
+					r.push_back(self->get_next());
 				}
 			}
 			catch(::underscore::eog &e){

@@ -57,7 +57,7 @@ int main(void){
 				.map([](const ::underscore::string &str) -> std::string{
 					return str.slice(0,-4);
 				});
-	for(auto &c: gen.slice(0,5)){
+	for(auto &c: gen){
 		n++;
 	}
 	std::cout<<n<<std::endl;
