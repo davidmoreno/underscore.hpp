@@ -16,8 +16,9 @@
 
 #pragma once
 #include <algorithm>
-#include <boost/concept_check.hpp>
+#include <vector>
 #include "underscore.hpp"
+#include "string.hpp"
 
 namespace underscore{
 	class eog : public std::exception{
@@ -97,6 +98,20 @@ namespace underscore{
 			return r;
 		}
 		
+		::underscore::underscore<std::vector<::underscore::string>> to_vector(){
+			std::vector<::underscore::string> r;
+			gen_type *self=(gen_type*)this;
+			try{
+				while(!self->empty()){
+					r.push_back(self->get_next());
+				}
+			}
+			catch(::underscore::eog &e){
+			}
+			return r;
+		}
+
+		
 		::underscore::underscore<std::vector<std::string>> sort(){
 			std::vector<std::string> v=*this;
 			std::sort(std::begin(v), std::end(v));
@@ -112,7 +127,6 @@ namespace underscore{
 			public:
 				slicer(ssize_t _start, ssize_t _end) : start(_start), end(_end), i(0) {}
 				bool operator()(const std::string &ignore){
-					std::cout<<"Check "<<i<<" ("<<start<<","<<end<<")"<<std::endl;
 					if (i>=start){
 						i++;
 						if (i>=end)

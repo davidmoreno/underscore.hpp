@@ -7,6 +7,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <boost/graph/graph_concepts.hpp>
 
 using namespace underscore;
 
@@ -197,6 +198,56 @@ void g01_generator(){
 	END_LOCAL();
 }
 
+void g02_gentest(){
+	INIT_LOCAL();
+	auto gl=::underscore::vector({"Hello","World!","How","are","you?"})
+						.filter([](const std::string &s){
+							return s.length()>4;
+						})
+						.map([](const std::string &s){
+							return s+"...";
+							})
+						.filter([](const std::string &s){
+							return s.length()>4;
+						})
+						.map([](const std::string &s){
+							return s;
+							})
+						.filter([](const std::string &s){
+							return s.length()>0;
+						})
+						.map([](const std::string &s){
+								return std::string("...")+s;
+							}).to_vector();
+		;
+	FAIL_IF_NOT_EQUAL_STRING( gl.join(", "), "...Hello..., ...World!...");
+	END_LOCAL();
+}
+
+void g03_slice(){
+	INIT_LOCAL();
+	int n=0;
+	auto gen=file("/etc/services")
+				.map([](const ::underscore::string &str) -> std::string{
+// 					std::cout<<&str<<std::endl;
+					if (str.contains('#'))
+						return str.slice(0,str.index('#')).strip();
+					return str;
+				})
+				.filter([](const ::underscore::string &str){ 
+// 					std::cout<<&str<<std::endl;
+					return !str.empty() && str.endswith("/tcp"); 
+				})
+				.map([](const ::underscore::string &str) -> std::string{
+					return str.slice(0,-4);
+				}).slice(0,5);
+	for(auto &c: gen){
+		n++;
+	}
+	FAIL_IF_NOT_EQUAL_INT(n,5);
+	END_LOCAL();
+}
+
 void st01_strings(){
 	INIT_LOCAL();
 	
@@ -344,6 +395,8 @@ int main(int argc, char **argv){
 	t10_flatmap();
 	
 	g01_generator();
+	g02_gentest();
+	g03_slice();
 	
 	st01_strings();
 	st02_strings_underscore();
