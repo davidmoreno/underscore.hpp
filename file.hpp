@@ -29,7 +29,7 @@ namespace underscore{
 		}
 		
 		bool empty(){
-			return ifs->eof();
+			return !ifs->is_open() || ifs->eof();
 		}
 		std::string get_next(){
 			if (empty())

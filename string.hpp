@@ -17,7 +17,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <boost/concept_check.hpp>
+#include <stdexcept>
 #include "underscore.hpp"
 
 namespace underscore{
