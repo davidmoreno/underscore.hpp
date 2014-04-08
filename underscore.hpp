@@ -19,6 +19,12 @@
 #include "sequence.hpp"
 
 namespace underscore{
+	class string;
+	
+	template<typename I>
+	class range;
+	
+	
 	/**
 	 * @short Creates an sequence container of the given value. It copies the data.
 	 * 
