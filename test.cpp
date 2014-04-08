@@ -3,6 +3,8 @@
 #include "generator.hpp"
 #include "string.hpp"
 #include "file.hpp"
+#include "range.hpp"
+#include "underscore.hpp"
 
 #include <vector>
 #include <iostream>
