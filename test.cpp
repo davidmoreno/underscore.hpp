@@ -1,4 +1,4 @@
-#include "underscore.hpp"
+#include "sequence.hpp"
 #include "ctest.h"
 #include "generator.hpp"
 #include "string.hpp"
@@ -7,7 +7,6 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <boost/graph/graph_concepts.hpp>
 
 using namespace underscore;
 
@@ -200,7 +199,7 @@ void g01_generator(){
 
 void g02_gentest(){
 	INIT_LOCAL();
-	auto gl=::underscore::vector({"Hello","World!","How","are","you?"})
+	auto gl=underscore::vector({"Hello","World!","How","are","you?"})
 						.filter([](const std::string &s){
 							return s.length()>4;
 						})
@@ -228,17 +227,17 @@ void g03_slice(){
 	INIT_LOCAL();
 	int n=0;
 	auto gen=file("/etc/services")
-				.map([](const ::underscore::string &str) -> std::string{
+				.map([](const underscore::string &str) -> std::string{
 // 					std::cout<<&str<<std::endl;
 					if (str.contains('#'))
 						return str.slice(0,str.index('#')).strip();
 					return str;
 				})
-				.filter([](const ::underscore::string &str){ 
+				.filter([](const underscore::string &str){ 
 // 					std::cout<<&str<<std::endl;
 					return !str.empty() && str.endswith("/tcp"); 
 				})
-				.map([](const ::underscore::string &str) -> std::string{
+				.map([](const underscore::string &str) -> std::string{
 					return str.slice(0,-4);
 				}).slice(0,5);
 	for(auto &c: gen){

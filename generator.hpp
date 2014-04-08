@@ -17,7 +17,7 @@
 #pragma once
 #include <algorithm>
 #include <vector>
-#include "underscore.hpp"
+#include "sequence.hpp"
 #include "string.hpp"
 
 namespace underscore{
@@ -38,12 +38,12 @@ namespace underscore{
 			using generator_type=T;
 		private:
 			generator_type *parent;
-			std::string current;
+			underscore::string current;
 		public:
 			iterator(generator_type *_parent) : parent(_parent){}
 			iterator() : parent(nullptr){}
 			
-			const std::string &operator*(){
+			const underscore::string &operator*(){
 				return current;
 			}
 			iterator &operator++(){
@@ -64,13 +64,13 @@ namespace underscore{
 		};
 
 		using gen_type=T;
-		typedef std::function<std::string (const std::string &)> map_f;
-		typedef std::function<bool (const std::string &)> filter_f;
+		typedef std::function<underscore::string (const underscore::string &)> map_f;
+		typedef std::function<bool (const underscore::string &)> filter_f;
 		
 		bool empty(){
 			throw std::runtime_error("Need to implement empty in your generator");
 		};
-		std::string get_next(){
+		underscore::string get_next(){
 			throw std::runtime_error("Need to implement get_next in your generator");
 		};
 		
@@ -85,8 +85,8 @@ namespace underscore{
 		
 		
 		/// Going to list world.
-		operator std::vector<std::string>(){
-			std::vector<std::string> r;
+		operator std::vector<underscore::string>(){
+			std::vector<underscore::string> r;
 			gen_type *self=(gen_type*)this;
 			try{
 				while(!self->empty()){
@@ -98,7 +98,7 @@ namespace underscore{
 			return r;
 		}
 		
-		::underscore::underscore<std::vector<::underscore::string>> to_vector(){
+		sequence<std::vector<::underscore::string>> to_vector(){
 			std::vector<::underscore::string> r;
 			gen_type *self=(gen_type*)this;
 			try{
@@ -112,8 +112,8 @@ namespace underscore{
 		}
 
 		
-		::underscore::underscore<std::vector<std::string>> sort(){
-			std::vector<std::string> v=*this;
+		sequence<std::vector<underscore::string>> sort(){
+			std::vector<underscore::string> v=*this;
 			std::sort(std::begin(v), std::end(v));
 			return v;
 		}
@@ -126,7 +126,7 @@ namespace underscore{
 				ssize_t i;
 			public:
 				slicer(ssize_t _start, ssize_t _end) : start(_start), end(_end), i(0) {}
-				bool operator()(const std::string &ignore){
+				bool operator()(const underscore::string &ignore){
 					if (i>=start){
 						i++;
 						if (i>=end)
@@ -154,7 +154,7 @@ namespace underscore{
 		bool empty(){
 			return _prev.empty();
 		}
-		std::string get_next(){
+		underscore::string get_next(){
 			return _f( this->_prev.get_next() );
 		}
 	};
@@ -170,7 +170,7 @@ namespace underscore{
 		bool empty(){
 			return _prev.empty();
 		}
-		std::string get_next(){
+		underscore::string get_next(){
 			while(!empty()){
 				auto v=_prev.get_next();
 				if (_f(v))
@@ -193,16 +193,16 @@ namespace underscore{
 	
 	/// specific generators
 	class vector : public generator<vector>{
-		std::vector<std::string> v;
+		std::vector<underscore::string> v;
 		size_t n;
 	public:
-		vector(const std::vector<std::string> &strl) : v(strl), n(0) {}
+		vector(const std::vector<underscore::string> &strl) : v(strl), n(0) {}
 		vector(vector &&o) : v(std::move(o.v)), n(o.n) {}
 
 		bool empty(){
 			return (n>=v.size());
 		}
-		std::string get_next(){
+		underscore::string get_next(){
 			if (empty())
 				throw ::underscore::eog();
 			return v[n++];

@@ -18,12 +18,12 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "underscore.hpp"
+#include "sequence.hpp"
 
 namespace underscore{
 	class string;
 	
-	typedef ::underscore::underscore<std::vector<string>> string_list;
+	typedef sequence<std::vector<string>> string_list;
 	typedef std::vector<string> std_string_list;
 	
 	class string{

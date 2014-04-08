@@ -108,9 +108,9 @@ namespace underscore{
 	}
 	
 	/**
-	 * @short Wraps any container and add the underscore methods
+	 * @short Wraps any container and add the sequence methods
 	 * 
-	 * With the underscore methods it is much easier to reason about the operations to do on the lists, 
+	 * With the sequence methods it is much easier to reason about the operations to do on the lists, 
 	 * and chain operations. For example, to print a list:
 	 * 
 	 * 	std::cout<<_({1,2,3,4,5}).join()<<std::endl;
@@ -119,12 +119,12 @@ namespace underscore{
 	 * 
 	 * 	auto catlist=_({1,2,3,4}).map<Cat>([](int n){ return Cat(n); })
 	 * 
-	 * It it itself a container, so it can be feed into another underscore (underscore<underscore<std::vector<int>>>, for example).
+	 * It it itself a container, so it can be feed into another sequence (sequence<sequence<std::vector<int>>>, for example).
 	 * 
 	 * All normal operations as begin, end, size, count and empty are implemented. Then it adds many more to ease list based programming.
 	 */
 	template<typename T>
-	class underscore{
+	class sequence{
 		T _data;
 		
 		ssize_t _wrap_position(ssize_t p) const{
@@ -144,9 +144,9 @@ namespace underscore{
 		typedef typename T::iterator iterator;
 		typedef typename T::const_iterator const_iterator;
 	public:
-		underscore(const T &data) : _data(data) {}
-		underscore(T &&data) : _data(data) {}
-		underscore() {}
+		sequence(const T &data) : _data(data) {}
+		sequence(T &&data) : _data(data) {}
+		sequence() {}
 
 		iterator begin(){ return std::begin(_data); }
 		iterator end(){ return std::end(_data); }
@@ -195,8 +195,8 @@ namespace underscore{
 		 * 
 		 * 	_({"red","green","blue"}).filter([](const std::string &s){ return !s.contains('r'); }) == {"blue"}
 		 */
-		underscore<T> filter(const std::function<bool (const value_type &)> &f) const{
-			underscore<T> ret;
+		sequence<T> filter(const std::function<bool (const value_type &)> &f) const{
+			sequence<T> ret;
 			ret._data.reserve(_data.size());
 			std::copy_if(_data.begin(), _data.end(), std::back_inserter(ret._data), f);
 			return ret;
@@ -209,8 +209,8 @@ namespace underscore{
 		 * 
 		 * Returns a new list.
 		 */
-		underscore<T> remove(const value_type &v) const{
-			underscore<T> ret;
+		sequence<T> remove(const value_type &v) const{
+			sequence<T> ret;
 			ret._data.reserve(_data.size());
 			std::copy_if(_data.begin(), _data.end(), std::back_inserter(ret._data), [&v](const value_type &m){ return m!=v; });
 			return ret;
@@ -220,11 +220,11 @@ namespace underscore{
 		 * @short Applies a mapping function to each element of the list, and return a new one.
 		 */
 		template<typename S>
-		underscore<std::vector<S>> map(const std::function<S (const value_type &)> &f) const{
+		sequence<std::vector<S>> map(const std::function<S (const value_type &)> &f) const{
 			std::vector<S> ret;
 			ret.reserve(size());
 			std::transform(_data.begin(),_data.end(), std::back_inserter(ret), f);
-			return underscore<std::vector<S>>(std::move(ret));
+			return sequence<std::vector<S>>(std::move(ret));
 		}
 		/**
 		 * @short Applies a mapping function to each element of the list, and return a new one. Tuple version.
@@ -232,25 +232,25 @@ namespace underscore{
 		 * The transformation function accepts 2 parameters, one for each element of the vector of tuples.
 		 */
 		template<typename S, typename A, typename B>
-		underscore<std::vector<S>> map(const std::function<S (const A &a, const B &b)> &f) const{
+		sequence<std::vector<S>> map(const std::function<S (const A &a, const B &b)> &f) const{
 			std::vector<S> ret;
 			ret.reserve(size());
 			std::transform(_data.begin(),_data.end(), std::back_inserter(ret), [&f](const std::tuple<A,B> &d){
 				return f(std::get<0>(d),std::get<1>(d));
 			});
-			return underscore<std::vector<S>>(std::move(ret));
+			return sequence<std::vector<S>>(std::move(ret));
 		}
 		/**
 		 * @short Applies a mapping function to each element of the list, and return a new one. Same value_type as source, simple transform.
 		 */
-		underscore<std::vector<value_type>> map(const std::function<value_type (const value_type &)> &f) const{
+		sequence<std::vector<value_type>> map(const std::function<value_type (const value_type &)> &f) const{
 			return map<value_type>(f);
 		}
 		
 		/**
 		 * @short Just executes a function on each element. Returns the same list.
 		 */
-		underscore<T> each(const std::function<void (const value_type &)> &f) const{
+		sequence<T> each(const std::function<void (const value_type &)> &f) const{
 			for(const auto &v: _data)
 				f(v);
 			return *this;
@@ -263,7 +263,7 @@ namespace underscore{
 		 * 	a=_({"Hello","world"}).flatMap<std::string>([](const std::string &s){ return _(s); }) == {'H','e','l','l','o',','w','o','r','l','d'}
 		 */
 		template<typename S>
-		underscore<std::vector<typename S::value_type>> flatMap(const std::function<S (const value_type &)> &f){
+		sequence<std::vector<typename S::value_type>> flatMap(const std::function<S (const value_type &)> &f){
 			std::vector<typename S::value_type> ret;
 			for (auto &v: map(f)){
 				std::move(std::begin(v), std::end(v), std::back_inserter(ret));
@@ -274,7 +274,7 @@ namespace underscore{
 		/**
 		 * @short Sorts the elements using default < comparison.
 		 */
-		underscore<std::vector<value_type>> sort() const{
+		sequence<std::vector<value_type>> sort() const{
 			std::vector<value_type> ret;
 			ret.reserve(size());
 			std::copy(_data.begin(), _data.end(), std::back_inserter(ret));
@@ -285,7 +285,7 @@ namespace underscore{
 		/**
 		 * @short Sorts the elements using default < comparison.
 		 */
-		underscore<std::vector<value_type>> sort(const std::function<bool (const value_type &,const value_type &)> &lessThan) const{
+		sequence<std::vector<value_type>> sort(const std::function<bool (const value_type &,const value_type &)> &lessThan) const{
 			std::vector<value_type> ret;
 			ret.reserve(size());
 			std::copy(_data.begin(), _data.end(), std::back_inserter(ret));
@@ -300,7 +300,7 @@ namespace underscore{
 		 * 
 		 * If sorted pass the true parameter, and it will use O(N)
 		 */
-		underscore<std::vector<value_type>> unique(bool is_sorted=false) const{
+		sequence<std::vector<value_type>> unique(bool is_sorted=false) const{
 			std::vector<value_type> ret;
 			if (is_sorted){
 				std::unique_copy(std::begin(_data), std::end(_data), std::back_inserter(ret));
@@ -323,7 +323,7 @@ namespace underscore{
 		 * 
 		 * 	_({1,2,3,4,5,6}).slice(-1) == {1,2,3,4,5}.
 		 */
-		underscore<T> slice(ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
+		sequence<T> slice(ssize_t start, ssize_t end=std::numeric_limits<ssize_t>::max()) const{
 			start=_wrap_position(start);
 			end=_wrap_position(end);
 			auto s=size();
@@ -339,8 +339,8 @@ namespace underscore{
 		/**
 		 * @short Reverses the list.
 		 */
-		underscore<T> reverse() const{
-			underscore<T> ret;
+		sequence<T> reverse() const{
+			sequence<T> ret;
 			ret._data.reserve(size());
 			
 			std::copy(_data.rbegin(), _data.rend(), std::back_inserter(ret._data));
@@ -439,7 +439,7 @@ namespace underscore{
 		* 	auto a=get<0>( ab.unzip<int,char>() ); // == {1, 2, 3, 4}
 		*/
 		template<typename A_t, typename B_t>
-		std::tuple<underscore<std::vector<A_t>>, underscore<std::vector<B_t>>> unzip(){
+		std::tuple<sequence<std::vector<A_t>>, sequence<std::vector<B_t>>> unzip(){
 			std::vector<A_t> A;
 			std::vector<B_t> B;
 			size_t s=size();
@@ -452,7 +452,7 @@ namespace underscore{
 				B.push_back(std::get<1>(v));
 			}
 			
-			return std::make_tuple(underscore<std::vector<A_t>>(std::move(A)),underscore<std::vector<B_t>>(std::move(B)));
+			return std::make_tuple(sequence<std::vector<A_t>>(std::move(A)),sequence<std::vector<B_t>>(std::move(B)));
 		}
 		
 
@@ -472,18 +472,18 @@ namespace underscore{
 	};
 	
 	/**
-	 * @short Creates an underscore container of the given value. It copies the data.
+	 * @short Creates an sequence container of the given value. It copies the data.
 	 * 
 	 * Example:
 	 * 	const std::vector<int> v{1,2,3,4};
 	 * 	auto a=_(v);
 	 */
 	template<typename T>
-	inline underscore<T> _(const T &v){
-		return underscore<T>(v);
+	inline sequence<T> _(const T &v){
+		return sequence<T>(v);
 	}
 	/**
-	 * @short Creates an underscore container of the given value. Perfect forwarding version (std::move)
+	 * @short Creates an sequence container of the given value. Perfect forwarding version (std::move)
 	 * 
 	 * Example:
 	 * 	auto v=std::vector<int>{1,2,3,4};
@@ -494,36 +494,36 @@ namespace underscore{
 	 * 	auto a=_(std::vector<int>{1,2,3,4});
 	 */
 	template<typename T>
-	inline underscore<T> _(T &&v){
-		return underscore<T>(std::forward<T>(v));
+	inline sequence<T> _(T &&v){
+		return sequence<T>(std::forward<T>(v));
 	}
 	/**
-	 * @short Creates an underscore container with a vector of the elements into the initializer list.
+	 * @short Creates an sequence container with a vector of the elements into the initializer list.
 	 * 
 	 * Allows creation directly as:
 	 * 
 	 * 	auto a=_({1,2,3,4})
 	 */
 	template<typename T>
-	inline underscore<std::vector<T>> _(std::initializer_list<T> &&v){
-		return underscore<std::vector<T>>(std::vector<T>(std::forward<std::initializer_list<T>>(v)));
+	inline sequence<std::vector<T>> _(std::initializer_list<T> &&v){
+		return sequence<std::vector<T>>(std::vector<T>(std::forward<std::initializer_list<T>>(v)));
 	}
 	
 	/**
-	 * @short Creates anunderscore container from two ranges. Useful for subranges.
+	 * @short Creates ansequence container from two ranges. Useful for subranges.
 	 * 
 	 * It needs the ability to copy iterators.
 	 */
 	template<typename I>
-	inline underscore<range<I>> _(I &&begin, I &&end){
+	inline sequence<range<I>> _(I &&begin, I &&end){
 		return _(range<I>(begin, end));
 	}
 	
 	/**
 	 * @short Encapsulate a string.
 	 */
-	::underscore::string _(std::string &&s);
-	::underscore::string _(const char *s);
+	string _(std::string &&s);
+	string _(const char *s);
 	
 	/**
 	 * @short zips two lists into one of tuples
@@ -539,7 +539,7 @@ namespace underscore{
 	 * 	zip({1,2}, {'a','b','c','d'}) == {{1,'a'},{2,'b'},{0,'c'},{0,'d'}}
 	 */
 	template<typename A, typename B>
-	inline underscore<std::vector<std::tuple<typename A::value_type, typename B::value_type>>> zip(const A &a, const B &b){
+	inline sequence<std::vector<std::tuple<typename A::value_type, typename B::value_type>>> zip(const A &a, const B &b){
 		typedef std::tuple<typename A::value_type, typename B::value_type> ret_t;
 		std::vector<ret_t> ret;
 		ret.reserve(std::max(a.size(), b.size()));
@@ -574,7 +574,7 @@ namespace underscore{
 	 * Specialization with the first as a initializer list.
 	 */
 	template<typename A_t, typename B>
-	inline underscore<std::vector<std::tuple<A_t, typename B::value_type>>> zip(std::initializer_list<A_t> &&a, B &&b){
+	inline sequence<std::vector<std::tuple<A_t, typename B::value_type>>> zip(std::initializer_list<A_t> &&a, B &&b){
 		return zip(a, b);
 	}
 	/**
@@ -583,7 +583,7 @@ namespace underscore{
 	 * Specialization with the two as initializer list.
 	 */
 	template<typename A_t, typename B_t>
-	inline underscore<std::vector<std::tuple<A_t, B_t>>> zip(std::initializer_list<A_t> &&a, std::initializer_list<B_t>  &&b){
+	inline sequence<std::vector<std::tuple<A_t, B_t>>> zip(std::initializer_list<A_t> &&a, std::initializer_list<B_t>  &&b){
 		return zip(a, b);
 	}
 	/**
@@ -592,7 +592,7 @@ namespace underscore{
 	 * Specialization with the second as a initializer list.
 	 */
 	template<typename A, typename B_t>
-	inline underscore<std::vector<std::tuple<typename A::value_type, B_t>>> zip(A &&a, std::initializer_list<B_t>  &&b){
+	inline sequence<std::vector<std::tuple<typename A::value_type, B_t>>> zip(A &&a, std::initializer_list<B_t>  &&b){
 		return zip(a, b);
 	}
 };
