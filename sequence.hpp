@@ -22,6 +22,7 @@
 #include <sstream>
 #include <tuple>
 #include <map>
+#include <functional>
 
 namespace std{
 	inline std::string to_string(const std::string &str){ return str; }; // Need to copy it anyway, so no const &.
